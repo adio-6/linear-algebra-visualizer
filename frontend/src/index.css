@@ -2073,3 +2073,17 @@ a.student-nav-button {
     padding: 10px;
   }
 }
+
+.quiz-library-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 10px 0 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 700;
+}

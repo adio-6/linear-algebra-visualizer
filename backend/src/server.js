@@ -4,6 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import { initDb } from './db.js';
+import quizLibraryRoutes from './quizLibraryRoutes.js';
 import {
   addQuizResponse,
   addStudent,
@@ -45,9 +47,11 @@ const app = express();
 
 app.use(cors({
   origin: corsOrigin,
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 app.use(express.json());
+
+app.use('/api', quizLibraryRoutes);
 
 app.get('/healthz', (req, res) => {
   res.status(200).json({ ok: true });
@@ -73,7 +77,7 @@ const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: corsOrigin,
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
 
@@ -407,7 +411,17 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Linear Algebra Visualizer backend running on port ${PORT}`);
-  console.log(`Allowed frontend origins: ${ALLOWED_ORIGINS.join(', ')}`);
-});
+async function startServer() {
+  try {
+    await initDb();
+  } catch (error) {
+    console.warn('[db] initialization failed. Server will continue without persistent quiz library.', error);
+  }
+
+  httpServer.listen(PORT, () => {
+    console.log(`Linear Algebra Visualizer backend running on port ${PORT}`);
+    console.log(`Allowed frontend origins: ${ALLOWED_ORIGINS.join(', ')}`);
+  });
+}
+
+startServer();

@@ -106,3 +106,34 @@ Then update the production environment variables so both sides can communicate o
 ## Current limitations
 
 This step does not add a database. Rooms and live quiz state are still stored in backend memory, and custom quiz topics/questions are still stored in frontend `localStorage`.
+
+## Step 19 — PostgreSQL persistent quiz library
+
+After Step 19, custom quiz topics and questions should be stored in PostgreSQL instead of only in browser `localStorage`.
+
+### Render PostgreSQL setup
+
+1. In Render, create a new PostgreSQL database.
+2. Copy the database connection string. Render usually provides an internal database URL for services running on Render.
+3. Open the backend Web Service.
+4. Go to Environment.
+5. Add:
+
+```env
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DATABASE
+```
+
+6. Save changes.
+7. Redeploy the backend.
+
+The backend creates the required tables automatically and seeds default topics/questions if the database is empty.
+
+### Production check
+
+Open the Vercel frontend and go to Lecturer View. In `Manage Quiz Topics & Questions`, the status should say:
+
+```txt
+Quiz library: Server database
+```
+
+Add a topic and question, refresh the browser, and verify they remain visible.

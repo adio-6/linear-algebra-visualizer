@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { socket } from '../api/socketClient.js';
-import { quizWithoutExplanations } from '../data/quizzes.js';
 import {
-  addQuestionToTopic,
-  createTopic,
+  addQuestionToTopic as addLocalQuestionToTopic,
+  createTopic as createLocalTopic,
   loadQuizTopics,
   resetQuizTopics,
   saveQuizTopics,
 } from '../utils/quizStorage.js';
+import { quizWithoutExplanations } from '../data/quizzes.js';
+import {
+  addQuestionToTopic as addServerQuestionToTopic,
+  createQuizTopic,
+  fetchQuizTopics,
+} from '../api/quizLibraryApi.js';
 
 function inferConceptFromTopic(topic) {
   const text = `${topic?.id || ''} ${topic?.title || ''}`.toLowerCase();
@@ -20,6 +25,38 @@ function inferConceptFromTopic(topic) {
   if (text.includes('transform')) return 'transformation';
 
   return 'transformation';
+}
+
+
+function normalizeLibraryQuestion(question, topic) {
+  const questionId = question.questionId || question.id || `${topic.id}-question-${Date.now()}`;
+  return {
+    ...question,
+    id: question.id || questionId,
+    questionId,
+    topicId: question.topicId || topic.id,
+    topicTitle: question.topicTitle || topic.title,
+    concept: question.concept || topic.concept || inferConceptFromTopic(topic),
+    options: Array.isArray(question.options) ? question.options : [],
+    correctIndex: Number(question.correctIndex),
+  };
+}
+
+function normalizeLibraryTopics(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((topic) => {
+    const safeTopic = {
+      ...topic,
+      id: topic.id,
+      title: String(topic.title || 'Untitled topic').trim(),
+      concept: topic.concept || inferConceptFromTopic(topic),
+      questions: [],
+    };
+    safeTopic.questions = Array.isArray(topic.questions)
+      ? topic.questions.map((question) => normalizeLibraryQuestion(question, safeTopic))
+      : [];
+    return safeTopic;
+  }).filter((topic) => topic.id && topic.title);
 }
 
 function makeLiveQuiz(baseQuiz) {
@@ -126,6 +163,8 @@ function StudentAnswersPanel({ results, quiz, answerRevealed }) {
 
 export default function QuizCard({ joinCode }) {
   const [topics, setTopics] = useState(() => loadQuizTopics());
+  const [librarySource, setLibrarySource] = useState('local');
+  const [libraryLoading, setLibraryLoading] = useState(true);
   const [selectedTopicId, setSelectedTopicId] = useState(() => loadQuizTopics()[0]?.id || '');
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.id === selectedTopicId) || null,
@@ -148,6 +187,54 @@ export default function QuizCard({ joinCode }) {
   const [topicForm, setTopicForm] = useState({ title: '' });
   const [questionForm, setQuestionForm] = useState(makeEmptyQuestionForm);
   const [questionTopicId, setQuestionTopicId] = useState(selectedTopicId);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadServerLibrary() {
+      setLibraryLoading(true);
+      setLibraryError('');
+      try {
+        const serverTopics = normalizeLibraryTopics(await fetchQuizTopics());
+        if (!isMounted) return;
+
+        if (serverTopics.length === 0) {
+          throw new Error('Server quiz library returned no topics.');
+        }
+
+        setTopics(serverTopics);
+        setSelectedTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
+        setQuestionTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
+        setSelectedQuestionId((current) => {
+          if (serverTopics.some((topic) => topic.questions.some((question) => question.questionId === current))) return current;
+          return serverTopics[0]?.questions?.[0]?.questionId || '';
+        });
+        setLibrarySource('server');
+        setLibraryMessage('Quiz library: Server database');
+      } catch (error) {
+        if (!isMounted) return;
+        const localTopics = loadQuizTopics();
+        setTopics(localTopics);
+        setSelectedTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
+        setQuestionTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
+        setSelectedQuestionId((current) => {
+          if (localTopics.some((topic) => topic.questions.some((question) => question.questionId === current))) return current;
+          return localTopics[0]?.questions?.[0]?.questionId || '';
+        });
+        setLibrarySource('local');
+        setLibraryError('Using local quiz library because server library is unavailable.');
+        console.warn('Server quiz library unavailable. Falling back to localStorage.', error);
+      } finally {
+        if (isMounted) setLibraryLoading(false);
+      }
+    }
+
+    loadServerLibrary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedTopicId && topics[0]) {
@@ -226,7 +313,26 @@ export default function QuizCard({ joinCode }) {
     setError('');
   }
 
-  function handleAddTopic(event) {
+  async function refreshServerTopics(preferredTopicId = '', preferredQuestionId = '') {
+    const serverTopics = normalizeLibraryTopics(await fetchQuizTopics());
+    setTopics(serverTopics);
+    setLibrarySource('server');
+
+    const nextTopicId = preferredTopicId && serverTopics.some((topic) => topic.id === preferredTopicId)
+      ? preferredTopicId
+      : serverTopics[0]?.id || '';
+    const nextTopic = serverTopics.find((topic) => topic.id === nextTopicId) || null;
+    const nextQuestionId = preferredQuestionId && nextTopic?.questions?.some((question) => question.questionId === preferredQuestionId)
+      ? preferredQuestionId
+      : nextTopic?.questions?.[0]?.questionId || '';
+
+    setSelectedTopicId(nextTopicId);
+    setQuestionTopicId(nextTopicId);
+    setSelectedQuestionId(nextQuestionId);
+    return serverTopics;
+  }
+
+  async function handleAddTopic(event) {
     event.preventDefault();
     setLibraryError('');
     setLibraryMessage('');
@@ -237,7 +343,25 @@ export default function QuizCard({ joinCode }) {
       return;
     }
 
-    const topic = createTopic(title);
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        const topic = await createQuizTopic(title);
+        const nextTopics = await refreshServerTopics(topic.id, '');
+        setSelectedTopicId(topic.id);
+        setQuestionTopicId(topic.id);
+        setSelectedQuestionId(nextTopics.find((item) => item.id === topic.id)?.questions?.[0]?.questionId || '');
+        setTopicForm({ title: '' });
+        setLibraryMessage('Topic added. You can now add questions to it.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not add topic to server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    const topic = createLocalTopic(title);
     const nextTopics = saveQuizTopics([...topics, topic]);
     setTopics(nextTopics);
     setSelectedTopicId(topic.id);
@@ -254,7 +378,7 @@ export default function QuizCard({ joinCode }) {
     }));
   }
 
-  function handleAddQuestion(event) {
+  async function handleAddQuestion(event) {
     event.preventDefault();
     setLibraryError('');
     setLibraryMessage('');
@@ -285,6 +409,26 @@ export default function QuizCard({ joinCode }) {
       return;
     }
 
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        const question = await addServerQuestionToTopic(targetTopic.id, {
+          question: questionText,
+          options,
+          correctIndex,
+        });
+        const questionId = question.questionId || question.id;
+        await refreshServerTopics(targetTopic.id, questionId);
+        setQuestionForm(makeEmptyQuestionForm());
+        setLibraryMessage('Question added.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not add question to server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
     const questionId = `${targetTopic.id}-question-${Date.now()}`;
     const question = {
       questionId,
@@ -296,7 +440,7 @@ export default function QuizCard({ joinCode }) {
       correctIndex,
     };
 
-    const nextTopics = addQuestionToTopic(targetTopic.id, question);
+    const nextTopics = addLocalQuestionToTopic(targetTopic.id, question);
     setTopics(nextTopics);
     setSelectedTopicId(targetTopic.id);
     setQuestionTopicId(targetTopic.id);
@@ -306,7 +450,13 @@ export default function QuizCard({ joinCode }) {
   }
 
   function handleResetLibrary() {
-    const confirmed = window.confirm('This will reset custom topics and questions to defaults. Continue?');
+    if (librarySource === 'server') {
+      setLibraryMessage('Reset is disabled for the server database to avoid deleting shared questions.');
+      setLibraryError('');
+      return;
+    }
+
+    const confirmed = window.confirm('This will reset custom local fallback topics and questions to defaults. Continue?');
     if (!confirmed) return;
 
     const nextTopics = resetQuizTopics();
@@ -317,7 +467,7 @@ export default function QuizCard({ joinCode }) {
     setTopicForm({ title: '' });
     setQuestionForm(makeEmptyQuestionForm());
     setLibraryError('');
-    setLibraryMessage('Quiz library reset to defaults.');
+    setLibraryMessage('Local fallback quiz library reset to defaults.');
   }
 
   function findNextQuestionInTopic(topicId, currentQuestionId) {
@@ -574,6 +724,9 @@ export default function QuizCard({ joinCode }) {
 
         <details className="quiz-management" open={false}>
           <summary>Manage Quiz Topics & Questions</summary>
+          <div className="quiz-library-status">
+            {libraryLoading ? 'Loading quiz library...' : `Quiz library: ${librarySource === 'server' ? 'Server database' : 'Local fallback'}`}
+          </div>
           <div className="quiz-management-grid">
             <form className="quiz-builder-form" onSubmit={handleAddTopic}>
               <div className="section-title small-title">Add New Topic</div>
@@ -586,7 +739,7 @@ export default function QuizCard({ joinCode }) {
                   placeholder="Example: Orthogonality"
                 />
               </label>
-              <button className="btn primary" type="submit">Add Topic</button>
+              <button className="btn primary" type="submit" disabled={isBusy || libraryLoading}>Add Topic</button>
             </form>
 
             <form className="quiz-builder-form" onSubmit={handleAddQuestion}>
@@ -649,13 +802,13 @@ export default function QuizCard({ joinCode }) {
               <div className="quiz-feedback">
                 Related concept is selected automatically from the topic.
               </div>
-              <button className="btn primary" type="submit" disabled={!questionTopicId}>Add Question</button>
+              <button className="btn primary" type="submit" disabled={!questionTopicId || isBusy || libraryLoading}>Add Question</button>
             </form>
           </div>
 
           <div className="quiz-library-actions">
-            <button className="btn" type="button" onClick={handleResetLibrary}>Reset Quiz Library</button>
-            <span className="quiz-feedback">Custom topics are saved only in this browser using localStorage.</span>
+            <button className="btn" type="button" onClick={handleResetLibrary}>Reset Local Fallback Library</button>
+            <span className="quiz-feedback">Server database is the main quiz library. Local reset is only for fallback mode.</span>
           </div>
           {libraryMessage && <div className="message-box success-message">{libraryMessage}</div>}
           {libraryError && <div className="message-box error-message">{libraryError}</div>}

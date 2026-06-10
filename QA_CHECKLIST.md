@@ -270,3 +270,17 @@ Run this short test immediately before a demo or submission:
 - [ ] `npm install` no longer tries to download packages from an internal OpenAI registry URL.
 - [ ] Live session still works locally.
 - [ ] Live Quiz still works locally.
+
+## Step 19 — Persistent Quiz Library with PostgreSQL
+
+- [ ] Backend starts successfully when `DATABASE_URL` is configured.
+- [ ] Backend still starts when `DATABASE_URL` is missing, without breaking rooms or Socket.io.
+- [ ] `GET /api/quiz-topics` returns default topics from PostgreSQL.
+- [ ] Add Topic saves a topic to the server database.
+- [ ] Add Question saves a question to the server database.
+- [ ] Added topic/question persists after browser refresh.
+- [ ] Added topic/question is visible from another browser or computer.
+- [ ] Live Quiz opens a question loaded from the database.
+- [ ] Next Question works with database-loaded topics.
+- [ ] Update Live Quiz works with database-loaded topics.
+- [ ] If the database/API is unavailable, the frontend shows local fallback mode.

@@ -181,3 +181,7 @@ Deployment documentation was added in `README_DEPLOYMENT.md`, including local `.
 ## Step 17.1 — Dotenv Install Fix
 
 Removed the external dotenv runtime dependency and added a local `.env` loader so the backend can run even when npm cannot install dotenv from a generated lockfile URL. The package-lock registry URLs were also normalized to public npm registry URLs.
+
+## Step 19 — Persistent Quiz Library with PostgreSQL
+
+Step 19 moved the Quiz Topics and Question Builder from browser-only `localStorage` to a persistent PostgreSQL-backed library. The backend now exposes REST API routes for loading quiz topics, creating topics, adding questions, updating topics, and deleting topics. On startup, the backend initializes the database schema and seeds default quiz topics/questions if the database is empty. The frontend now uses the backend database as the primary quiz library source, while keeping `localStorage` as a fallback if the server database is unavailable.
