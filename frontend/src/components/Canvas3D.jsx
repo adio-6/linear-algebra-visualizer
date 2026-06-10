@@ -1,0 +1,318 @@
+import { useEffect, useMemo, useRef } from 'react';
+import * as THREE from 'three';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Html, OrbitControls } from '@react-three/drei';
+import { lerpMatrix3, linComb3, matVec3 } from '../math/linearAlgebra.js';
+import { useVisualizerStore } from '../store/useVisualizerStore.js';
+
+function length3(v) {
+  return Math.hypot(v[0] ?? 0, v[1] ?? 0, v[2] ?? 0);
+}
+
+function normalize3(v) {
+  const len = length3(v);
+  if (len < 1e-9) return [0, 0, 0];
+  return [v[0] / len, v[1] / len, v[2] / len];
+}
+
+function add3(a, b) {
+  return [(a[0] ?? 0) + (b[0] ?? 0), (a[1] ?? 0) + (b[1] ?? 0), (a[2] ?? 0) + (b[2] ?? 0)];
+}
+
+function scale3(v, scalar) {
+  return [(v[0] ?? 0) * scalar, (v[1] ?? 0) * scalar, (v[2] ?? 0) * scalar];
+}
+
+function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1 }) {
+  const len = length3(vector);
+  const dir = normalize3(vector);
+
+  if (len < 1e-6) return null;
+
+  return (
+    <group>
+      <primitive
+        object={new THREE.ArrowHelper(
+          new THREE.Vector3(dir[0], dir[1], dir[2]),
+          new THREE.Vector3(0, 0, 0),
+          len,
+          color,
+          Math.min(0.35, len * 0.22),
+          Math.min(0.2, len * 0.12),
+        )}
+      />
+      {label && (
+        <Html position={[vector[0] * 1.06, vector[1] * 1.06, vector[2] * 1.06]} center>
+          <span className="label3d" style={{ borderColor: color, color, opacity }}>{label}</span>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+function AxisLine({ axis, color, label }) {
+  const points = useMemo(() => {
+    const len = 4.5;
+    const a = scale3(axis, -len);
+    const b = scale3(axis, len);
+    return [new THREE.Vector3(...a), new THREE.Vector3(...b)];
+  }, [axis]);
+
+  const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
+  const labelPos = scale3(axis, 4.75);
+
+  return (
+    <group>
+      <line geometry={geometry}>
+        <lineBasicMaterial color={color} transparent opacity={0.55} />
+      </line>
+      <Html position={labelPos} center>
+        <span className="label3d axis-label" style={{ color }}>{label}</span>
+      </Html>
+    </group>
+  );
+}
+
+function SpanLine3D({ vector, color }) {
+  const len = length3(vector);
+  if (len < 1e-6) return null;
+
+  const dir = normalize3(vector);
+  const p1 = scale3(dir, -5);
+  const p2 = scale3(dir, 5);
+  const geometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(...p1),
+    new THREE.Vector3(...p2),
+  ]);
+
+  return (
+    <line geometry={geometry}>
+      <lineDashedMaterial color={color} dashSize={0.25} gapSize={0.18} transparent opacity={0.75} />
+    </line>
+  );
+}
+
+function BasisParallelogram({ v, u, color = '#0ea5e9' }) {
+  const p0 = [0, 0, 0];
+  const p1 = v;
+  const p2 = add3(v, u);
+  const p3 = u;
+
+  const geometry = useMemo(() => {
+    const positions = new Float32Array([...p0, ...p1, ...p2, ...p0, ...p2, ...p3]);
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.computeVertexNormals();
+    return geom;
+  }, [v, u]);
+
+  const edgeGeometry = useMemo(() => {
+    const positions = new Float32Array([...p0, ...p1, ...p1, ...p2, ...p2, ...p3, ...p3, ...p0]);
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geom;
+  }, [v, u]);
+
+  return (
+    <group>
+      <mesh geometry={geometry}>
+        <meshBasicMaterial color={color} transparent opacity={0.22} side={THREE.DoubleSide} />
+      </mesh>
+      <lineSegments geometry={edgeGeometry}>
+        <lineBasicMaterial color={color} transparent opacity={0.95} />
+      </lineSegments>
+    </group>
+  );
+}
+
+function TransformedUnitCube({ matrix, det }) {
+  const color = Math.abs(det) < 0.05 ? '#f59e0b' : det < 0 ? '#dc2626' : '#4f46e5';
+
+  const { surfaceGeometry, edgeGeometry } = useMemo(() => {
+    const corners = [];
+    for (let i = 0; i < 8; i += 1) {
+      const base = [(i >> 0) & 1, (i >> 1) & 1, (i >> 2) & 1];
+      corners.push(matVec3(matrix, base));
+    }
+
+    const faces = [
+      [0, 1, 3, 2],
+      [4, 5, 7, 6],
+      [0, 1, 5, 4],
+      [2, 3, 7, 6],
+      [0, 2, 6, 4],
+      [1, 3, 7, 5],
+    ];
+
+    const surfacePositions = [];
+    faces.forEach((face) => {
+      const [a, b, c, d] = face.map((index) => corners[index]);
+      surfacePositions.push(...a, ...b, ...c, ...a, ...c, ...d);
+    });
+
+    const surface = new THREE.BufferGeometry();
+    surface.setAttribute('position', new THREE.Float32BufferAttribute(surfacePositions, 3));
+    surface.computeVertexNormals();
+
+    const edgePairs = [
+      [0, 1], [0, 2], [0, 4], [1, 3], [1, 5], [2, 3],
+      [2, 6], [3, 7], [4, 5], [4, 6], [5, 7], [6, 7],
+    ];
+    const edgePositions = [];
+    edgePairs.forEach(([a, b]) => edgePositions.push(...corners[a], ...corners[b]));
+
+    const edges = new THREE.BufferGeometry();
+    edges.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+
+    return { surfaceGeometry: surface, edgeGeometry: edges };
+  }, [matrix]);
+
+  return (
+    <group>
+      <mesh geometry={surfaceGeometry}>
+        <meshLambertMaterial color={color} transparent opacity={0.18} side={THREE.DoubleSide} />
+      </mesh>
+      <lineSegments geometry={edgeGeometry}>
+        <lineBasicMaterial color={color} transparent opacity={0.9} />
+      </lineSegments>
+    </group>
+  );
+}
+
+function Scene3D({ state }) {
+  const Mt = useMemo(() => lerpMatrix3(state.A, state.t), [state.A, state.t]);
+  const det = useMemo(() => {
+    const [a, b, c] = Mt[0];
+    const [d, e, f] = Mt[1];
+    const [g, h, i] = Mt[2];
+    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+  }, [Mt]);
+
+  const iHat = useMemo(() => matVec3(Mt, [1, 0, 0]), [Mt]);
+  const jHat = useMemo(() => matVec3(Mt, [0, 1, 0]), [Mt]);
+  const kHat = useMemo(() => matVec3(Mt, [0, 0, 1]), [Mt]);
+  const Av = useMemo(() => matVec3(Mt, state.v), [Mt, state.v]);
+  const Au = useMemo(() => matVec3(Mt, state.u), [Mt, state.u]);
+  const combination = useMemo(() => linComb3(state.alpha, state.u, state.beta, state.v), [state.alpha, state.u, state.beta, state.v]);
+
+  return (
+    <>
+      <ambientLight intensity={0.85} />
+      <directionalLight position={[5, 8, 6]} intensity={0.55} />
+      <directionalLight position={[-4, 4, -3]} intensity={0.2} />
+
+      <gridHelper args={[10, 10, '#cdd5e0', '#e3e8f0']} />
+      <AxisLine axis={[1, 0, 0]} color="#ef4444" label="x" />
+      <AxisLine axis={[0, 1, 0]} color="#22c55e" label="y" />
+      <AxisLine axis={[0, 0, 1]} color="#3b82f6" label="z" />
+
+      {(state.concept === 'determinant' || state.concept === 'transformation') && (
+        <TransformedUnitCube matrix={Mt} det={det} />
+      )}
+
+      <VectorArrow vector={iHat} color="#ef4444" label="A·e₁" />
+      <VectorArrow vector={jHat} color="#22c55e" label="A·e₂" />
+      <VectorArrow vector={kHat} color="#3b82f6" label="A·e₃" />
+
+      {state.concept === 'combination' ? (
+        <>
+          <VectorArrow vector={state.u} color="#f97316" label="u" opacity={0.65} />
+          <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={0.65} />
+          <VectorArrow vector={combination} color="#0ea5e9" label="αu+βv" />
+          <BasisParallelogram v={scale3(state.v, state.beta)} u={scale3(state.u, state.alpha)} color="#0ea5e9" />
+        </>
+      ) : (
+        <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
+      )}
+
+      {(state.concept === 'span' || state.concept === 'basis') && (
+        <>
+          <VectorArrow vector={Au} color="#f97316" label={state.concept === 'basis' ? 'A·u' : 'A·u'} />
+          <SpanLine3D vector={state.v} color="#4f46e5" />
+          <SpanLine3D vector={state.u} color="#f97316" />
+          <BasisParallelogram v={state.v} u={state.u} color="#0ea5e9" />
+        </>
+      )}
+
+      {state.concept === 'eigen' && (
+        <Html position={[0, -3.7, 0]} center>
+          <span className="label3d note3d">3D eigenvectors will be expanded later; rotate the scene and inspect the transformed basis.</span>
+        </Html>
+      )}
+    </>
+  );
+}
+
+function CameraSyncControls({ role, followLecturer, onCameraChange }) {
+  const camera3D = useVisualizerStore((s) => s.camera3D);
+  const setCamera3D = useVisualizerStore((s) => s.setCamera3D);
+  const { camera } = useThree();
+  const controlsRef = useRef(null);
+  const lastSentRef = useRef(0);
+  const applyingRemoteRef = useRef(false);
+
+  useEffect(() => {
+    if (role !== 'student' || !followLecturer || !camera3D || !controlsRef.current) return;
+
+    applyingRemoteRef.current = true;
+    camera.position.set(...camera3D.position);
+    camera.zoom = camera3D.zoom || 1;
+    camera.updateProjectionMatrix();
+    controlsRef.current.target.set(...camera3D.target);
+    controlsRef.current.update();
+
+    requestAnimationFrame(() => {
+      applyingRemoteRef.current = false;
+    });
+  }, [camera, camera3D, followLecturer, role]);
+
+  function handleChange() {
+    if (!controlsRef.current || applyingRemoteRef.current) return;
+
+    const nextCamera = {
+      position: [camera.position.x, camera.position.y, camera.position.z],
+      target: [controlsRef.current.target.x, controlsRef.current.target.y, controlsRef.current.target.z],
+      zoom: camera.zoom || 1,
+    };
+
+    if (role === 'lecturer') {
+      setCamera3D(nextCamera);
+
+      const now = Date.now();
+      if (now - lastSentRef.current >= 120) {
+        lastSentRef.current = now;
+        onCameraChange?.(nextCamera);
+      }
+    }
+
+    if (role === 'student' && !followLecturer) {
+      setCamera3D(nextCamera);
+    }
+  }
+
+  return <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.08} onChange={handleChange} />;
+}
+
+export default function Canvas3D({ role = 'lecturer', followLecturer = false, onCameraChange } = {}) {
+  const dim = useVisualizerStore((s) => s.dim);
+  const concept = useVisualizerStore((s) => s.concept);
+  const A = useVisualizerStore((s) => s.A);
+  const v = useVisualizerStore((s) => s.v);
+  const u = useVisualizerStore((s) => s.u);
+  const alpha = useVisualizerStore((s) => s.alpha);
+  const beta = useVisualizerStore((s) => s.beta);
+  const t = useVisualizerStore((s) => s.t);
+
+  const state = { dim, concept, A, v, u, alpha, beta, t };
+
+  return (
+    <div className="canvas3d d3-only" aria-label="3D linear algebra visualization">
+      <Canvas camera={{ position: [6, 5, 7], fov: 42, near: 0.1, far: 100 }}>
+        <color attach="background" args={['#f1f4fa']} />
+        <Scene3D state={state} />
+        <CameraSyncControls role={role} followLecturer={followLecturer} onCameraChange={onCameraChange} />
+      </Canvas>
+      <div className="canvas3d-help">drag to orbit · scroll to zoom</div>
+    </div>
+  );
+}
