@@ -2,7 +2,7 @@
 
 Interactive classroom tool for teaching and learning linear algebra concepts through visual 2D/3D demonstrations and live lecturer-student synchronization.
 
-The system lets a lecturer create a live session, demonstrate concepts such as linear transformations, determinants, span, basis, vector combinations and eigenvectors, and synchronize the visualization to students in real time. It also includes a live quiz flow where students answer questions and the lecturer sees class results and student status in real time.
+The system lets a lecturer create a live session, demonstrate concepts such as linear transformations, determinants, span, basis, vector combinations and eigenvectors, and synchronize the visualization to students in real time. It also includes a live quiz flow where students answer questions and the lecturer sees class results and student status in real time. Students can also enter a standalone Practice Alone mode without a lecturer or room code.
 
 ## Main technologies
 
@@ -130,7 +130,15 @@ The lecturer can:
 http://localhost:5173/student
 ```
 
-Students enter a nickname and room code.
+Students can either enter a nickname and room code to join a live class, or choose Practice Alone to work independently.
+
+### Student practice
+
+```txt
+http://localhost:5173/student-practice
+```
+
+Students can practice without a lecturer, room code, or live session. In this mode, visualization changes are local only, and students can answer practice questions from the quiz library using Check Answer and Next Question.
 
 ### Student room
 
@@ -191,10 +199,9 @@ This behavior is expected because the current version does not use a database or
 ## Known limitations
 
 - Rooms are stored in memory only.
-- No database.
+- Quiz topics/questions are stored in PostgreSQL when `DATABASE_URL` is configured, with local fallback if unavailable.
 - No login/authentication.
 - No persistent grades or quiz history.
-- Deployment configuration has been prepared with `.env.example` files, but the app has not been deployed yet.
 - No export to PDF/CSV.
 - If the backend restarts, existing rooms are lost and a new room code is required.
 
@@ -220,3 +227,9 @@ Expected response:
 ## Step 19 documentation
 
 - [Step 19 — Persistent Quiz Library with PostgreSQL](./README_STEP19_PERSISTENT_QUIZ_LIBRARY.md)
+
+### Current quiz library management
+
+The lecturer can manage the shared quiz library from **Manage Quiz Topics & Questions**. The current version supports adding topics, adding questions, deleting a selected question, and deleting a selected topic. When PostgreSQL is configured, these changes are saved in the server database and are available after refresh and from other browsers. If the database is unavailable, the app falls back to the local browser library.
+
+The previous experimental **Export snapshot** control was removed from the UI because it is not part of the implemented project scope.

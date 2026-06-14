@@ -4,13 +4,16 @@ import {
   addQuestionToTopic as addLocalQuestionToTopic,
   createTopic as createLocalTopic,
   loadQuizTopics,
-  resetQuizTopics,
   saveQuizTopics,
+  deleteTopic as deleteLocalTopic,
+  deleteQuestionFromTopic as deleteLocalQuestionFromTopic,
 } from '../utils/quizStorage.js';
 import { quizWithoutExplanations } from '../data/quizzes.js';
 import {
   addQuestionToTopic as addServerQuestionToTopic,
   createQuizTopic,
+  deleteQuizQuestion as deleteServerQuestion,
+  deleteQuizTopic as deleteServerTopic,
   fetchQuizTopics,
 } from '../api/quizLibraryApi.js';
 
@@ -187,6 +190,9 @@ export default function QuizCard({ joinCode }) {
   const [topicForm, setTopicForm] = useState({ title: '' });
   const [questionForm, setQuestionForm] = useState(makeEmptyQuestionForm);
   const [questionTopicId, setQuestionTopicId] = useState(selectedTopicId);
+  const [deleteTopicId, setDeleteTopicId] = useState(selectedTopicId);
+  const [deleteQuestionTopicId, setDeleteQuestionTopicId] = useState(selectedTopicId);
+  const [deleteQuestionId, setDeleteQuestionId] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -254,6 +260,28 @@ export default function QuizCard({ joinCode }) {
       setQuestionTopicId(selectedTopicId);
     }
   }, [questionTopicId, selectedTopicId]);
+
+  useEffect(() => {
+    const topicIds = new Set(topics.map((topic) => topic.id));
+    const fallbackTopicId = selectedTopicId || topics[0]?.id || '';
+
+    if (!deleteTopicId || !topicIds.has(deleteTopicId)) {
+      setDeleteTopicId(fallbackTopicId);
+    }
+
+    if (!deleteQuestionTopicId || !topicIds.has(deleteQuestionTopicId)) {
+      setDeleteQuestionTopicId(fallbackTopicId);
+      const fallbackTopic = topics.find((topic) => topic.id === fallbackTopicId);
+      setDeleteQuestionId(fallbackTopic?.questions?.[0]?.questionId || '');
+      return;
+    }
+
+    const questionTopic = topics.find((topic) => topic.id === deleteQuestionTopicId);
+    const questionIds = new Set((questionTopic?.questions || []).map((question) => question.questionId));
+    if (!deleteQuestionId || !questionIds.has(deleteQuestionId)) {
+      setDeleteQuestionId(questionTopic?.questions?.[0]?.questionId || '');
+    }
+  }, [topics, selectedTopicId, deleteTopicId, deleteQuestionTopicId, deleteQuestionId]);
 
   useEffect(() => {
     setLiveQuiz(null);
@@ -449,25 +477,96 @@ export default function QuizCard({ joinCode }) {
     setLibraryMessage('Question added.');
   }
 
-  function handleResetLibrary() {
-    if (librarySource === 'server') {
-      setLibraryMessage('Reset is disabled for the server database to avoid deleting shared questions.');
-      setLibraryError('');
+  async function handleDeleteTopic() {
+    setLibraryError('');
+    setLibraryMessage('');
+
+    const topic = topics.find((item) => item.id === deleteTopicId) || null;
+    if (!topic) {
+      setLibraryError('Choose a topic to delete.');
       return;
     }
 
-    const confirmed = window.confirm('This will reset custom local fallback topics and questions to defaults. Continue?');
+    const confirmed = window.confirm(`Delete topic "${topic.title}" and all of its questions? This action cannot be undone.`);
     if (!confirmed) return;
 
-    const nextTopics = resetQuizTopics();
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        await deleteServerTopic(topic.id);
+        const nextTopics = await refreshServerTopics('', '');
+        const nextTopicId = nextTopics[0]?.id || '';
+        setDeleteTopicId(nextTopicId);
+        setDeleteQuestionTopicId(nextTopicId);
+        setDeleteQuestionId(nextTopics[0]?.questions?.[0]?.questionId || '');
+        setLibraryMessage('Topic deleted from the server database.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not delete topic from server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    const nextTopics = deleteLocalTopic(topic.id);
     setTopics(nextTopics);
-    setSelectedTopicId(nextTopics[0]?.id || '');
-    setQuestionTopicId(nextTopics[0]?.id || '');
-    setSelectedQuestionId(nextTopics[0]?.questions?.[0]?.questionId || '');
-    setTopicForm({ title: '' });
-    setQuestionForm(makeEmptyQuestionForm());
+    const nextTopicId = nextTopics[0]?.id || '';
+    setSelectedTopicId((current) => current === topic.id ? nextTopicId : current);
+    setQuestionTopicId((current) => current === topic.id ? nextTopicId : current);
+    setSelectedQuestionId((current) => topic.questions.some((question) => question.questionId === current) ? nextTopics[0]?.questions?.[0]?.questionId || '' : current);
+    setDeleteTopicId(nextTopicId);
+    setDeleteQuestionTopicId(nextTopicId);
+    setDeleteQuestionId(nextTopics[0]?.questions?.[0]?.questionId || '');
+    setLibraryMessage('Topic deleted from local fallback library.');
+  }
+
+  async function handleDeleteQuestion() {
     setLibraryError('');
-    setLibraryMessage('Local fallback quiz library reset to defaults.');
+    setLibraryMessage('');
+
+    const topic = topics.find((item) => item.id === deleteQuestionTopicId) || null;
+    const question = topic?.questions?.find((item) => item.questionId === deleteQuestionId) || null;
+
+    if (!topic) {
+      setLibraryError('Choose a topic before deleting a question.');
+      return;
+    }
+
+    if (!question) {
+      setLibraryError('Choose a question to delete.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete this question from "${topic.title}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        await deleteServerQuestion(topic.id, question.questionId);
+        const nextTopics = await refreshServerTopics(topic.id, '');
+        const refreshedTopic = nextTopics.find((item) => item.id === topic.id) || null;
+        setDeleteQuestionTopicId(refreshedTopic?.id || nextTopics[0]?.id || '');
+        setDeleteQuestionId(refreshedTopic?.questions?.[0]?.questionId || nextTopics[0]?.questions?.[0]?.questionId || '');
+        setLibraryMessage('Question deleted from the server database.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not delete question from server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    const nextTopics = deleteLocalQuestionFromTopic(topic.id, question.questionId);
+    setTopics(nextTopics);
+    const refreshedTopic = nextTopics.find((item) => item.id === topic.id) || null;
+    const nextQuestionId = refreshedTopic?.questions?.[0]?.questionId || '';
+    if (selectedTopicId === topic.id && selectedQuestionId === question.questionId) {
+      setSelectedQuestionId(nextQuestionId);
+    }
+    setDeleteQuestionTopicId(topic.id);
+    setDeleteQuestionId(nextQuestionId);
+    setLibraryMessage('Question deleted from local fallback library.');
   }
 
   function findNextQuestionInTopic(topicId, currentQuestionId) {
@@ -806,9 +905,62 @@ export default function QuizCard({ joinCode }) {
             </form>
           </div>
 
-          <div className="quiz-library-actions">
-            <button className="btn" type="button" onClick={handleResetLibrary}>Reset Local Fallback Library</button>
-            <span className="quiz-feedback">Server database is the main quiz library. Local reset is only for fallback mode.</span>
+          <div className="quiz-delete-management">
+            <form className="quiz-builder-form delete-builder-form" onSubmit={(event) => { event.preventDefault(); handleDeleteTopic(); }}>
+              <div className="section-title small-title">Delete Topic</div>
+              <label className="field-group">
+                <span>Topic to delete</span>
+                <select
+                  value={deleteTopicId}
+                  onChange={(event) => setDeleteTopicId(event.target.value)}
+                  disabled={topics.length === 0 || isBusy || libraryLoading}
+                >
+                  {topics.length === 0 && <option value="">No topics available</option>}
+                  {topics.map((topic) => (
+                    <option value={topic.id} key={`delete-topic-${topic.id}`}>{topic.title}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="btn danger-btn" type="submit" disabled={!deleteTopicId || isBusy || libraryLoading}>Delete Topic</button>
+              <div className="quiz-feedback">Deleting a topic also deletes all questions under it.</div>
+            </form>
+
+            <form className="quiz-builder-form delete-builder-form" onSubmit={(event) => { event.preventDefault(); handleDeleteQuestion(); }}>
+              <div className="section-title small-title">Delete Question</div>
+              <label className="field-group">
+                <span>Topic</span>
+                <select
+                  value={deleteQuestionTopicId}
+                  onChange={(event) => {
+                    const topicId = event.target.value;
+                    const topic = topics.find((item) => item.id === topicId);
+                    setDeleteQuestionTopicId(topicId);
+                    setDeleteQuestionId(topic?.questions?.[0]?.questionId || '');
+                  }}
+                  disabled={topics.length === 0 || isBusy || libraryLoading}
+                >
+                  {topics.length === 0 && <option value="">No topics available</option>}
+                  {topics.map((topic) => (
+                    <option value={topic.id} key={`delete-question-topic-${topic.id}`}>{topic.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-group">
+                <span>Question to delete</span>
+                <select
+                  value={deleteQuestionId}
+                  onChange={(event) => setDeleteQuestionId(event.target.value)}
+                  disabled={!deleteQuestionTopicId || isBusy || libraryLoading}
+                >
+                  {(topics.find((topic) => topic.id === deleteQuestionTopicId)?.questions || []).length === 0 && <option value="">No questions available</option>}
+                  {(topics.find((topic) => topic.id === deleteQuestionTopicId)?.questions || []).map((question, index) => (
+                    <option value={question.questionId} key={`delete-question-${question.questionId}`}>{index + 1}. {question.question}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="btn danger-btn" type="submit" disabled={!deleteQuestionId || isBusy || libraryLoading}>Delete Question</button>
+              <div className="quiz-feedback">This deletes only the selected question.</div>
+            </form>
           </div>
           {libraryMessage && <div className="message-box success-message">{libraryMessage}</div>}
           {libraryError && <div className="message-box error-message">{libraryError}</div>}

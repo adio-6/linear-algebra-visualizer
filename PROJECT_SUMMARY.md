@@ -185,3 +185,15 @@ Removed the external dotenv runtime dependency and added a local `.env` loader s
 ## Step 19 — Persistent Quiz Library with PostgreSQL
 
 Step 19 moved the Quiz Topics and Question Builder from browser-only `localStorage` to a persistent PostgreSQL-backed library. The backend now exposes REST API routes for loading quiz topics, creating topics, adding questions, updating topics, and deleting topics. On startup, the backend initializes the database schema and seeds default quiz topics/questions if the database is empty. The frontend now uses the backend database as the primary quiz library source, while keeping `localStorage` as a fallback if the server database is unavailable.
+
+## Step 20 — Student Practice Mode
+
+Step 20 adds a standalone student practice flow. Students can now choose **Practice Alone** from the student entry page and use the visualization workspace without a lecturer, live room, or room code. In this mode, matrix/vector changes, concept selection, 2D/3D switching, and animation are local only and are not sent through Socket.io.
+
+The practice page also includes a Practice Quiz panel that loads quiz topics from the backend database when available, with local fallback if the server library is unavailable. Students can select a topic, select a question, choose an answer, click **Check Answer**, see whether the answer is correct, and move to the next question locally. This practice flow does not affect Live Quiz state, lecturer dashboards, class results, or student answer panels.
+
+## Step 20.1 — Targeted Quiz Library Delete + UI Cleanup
+
+This cleanup step added targeted delete controls to the lecturer quiz builder. The lecturer can now delete a selected topic, including its questions, or delete a selected question from a selected topic. The feature works with the PostgreSQL-backed server quiz library and also with the local fallback library if the database is unavailable. The old `Reset Local Fallback Library` control was removed from the visible UI to avoid accidental deletion of broad sets of questions.
+
+The unused `Export snapshot` control was also removed from the animation panel, and the related roadmap item was removed because that feature was not implemented and is not part of the current project scope.

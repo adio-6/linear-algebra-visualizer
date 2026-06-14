@@ -32,10 +32,6 @@ export default function AnimationControls({ onAnimate }) {
       </div>
       <div className="coef-label"><span>Speed</span><code>{Number(animSpeed).toFixed(1)}×</code></div>
       <input type="range" min="0.3" max="2.5" step="0.1" value={animSpeed} onChange={(e) => setAnimSpeed(Number(e.target.value))} />
-
-      <div className="future-row">
-        <span className="future-btn" title="Coming soon">📤 Export snapshot</span>
-      </div>
     </div>
   );
 }

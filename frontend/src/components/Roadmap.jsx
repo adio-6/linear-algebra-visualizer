@@ -3,7 +3,6 @@ export default function Roadmap() {
     ['🔄', 'Real-time classroom sync', 'Socket.io broadcasts every lecturer action to connected student screens.'],
     ['🧊', 'Advanced 3D visualizations', 'Future work: 3D eigen-axis visualization, camera fly-throughs, and richer shading.'],
     ['🧮', 'n×n matrices & abstract spaces', 'Beyond 2D/3D: arbitrary-dimensional matrices and symbolic computation.'],
-    ['📤', 'Export lesson snapshot', 'Save a frozen state of the canvas + matrix + explanation as PDF or PNG.'],
     ['⚛️', 'React + Node.js stack', 'Componentized React frontend, Node.js/Express backend, classroom rooms.'],
     ['✅', 'Numerical correctness tests', 'Automated tests validating every calculation against Python/NumPy or MATLAB.'],
   ];

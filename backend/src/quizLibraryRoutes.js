@@ -207,6 +207,26 @@ router.delete('/quiz-topics/:topicId', async (req, res) => {
   }
 });
 
+
+router.delete('/quiz-topics/:topicId/questions/:questionId', async (req, res) => {
+  try {
+    const result = await query(
+      'DELETE FROM quiz_questions WHERE topic_id = $1 AND id = $2 RETURNING id',
+      [req.params.topicId, req.params.questionId],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Question not found.' });
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[quiz-library] DELETE /quiz-topics/:topicId/questions/:questionId failed', error);
+    res.status(500).json({ error: 'Could not delete quiz question.' });
+  }
+});
+
 router.post('/quiz-topics/:topicId/questions', async (req, res) => {
   const validation = validateQuestionPayload(req.body);
   if (validation.error) {

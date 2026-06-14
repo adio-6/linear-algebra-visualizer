@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage.jsx';
 import LecturerPage from './pages/LecturerPage.jsx';
 import StudentJoinPage from './pages/StudentJoinPage.jsx';
 import StudentRoomPage from './pages/StudentRoomPage.jsx';
+import StudentPracticePage from './pages/StudentPracticePage.jsx';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
       <Route path="/lecturer" element={<LecturerPage />} />
       <Route path="/student" element={<StudentJoinPage />} />
       <Route path="/student/:code" element={<StudentRoomPage />} />
+      <Route path="/student-practice" element={<StudentPracticePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

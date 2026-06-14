@@ -61,3 +61,12 @@ export async function deleteQuizTopic(topicId) {
 
   return readJsonResponse(response);
 }
+
+
+export async function deleteQuizQuestion(topicId, questionId) {
+  const response = await fetch(`${API_BASE_URL}/api/quiz-topics/${encodeURIComponent(topicId)}/questions/${encodeURIComponent(questionId)}`, {
+    method: 'DELETE',
+  });
+
+  return readJsonResponse(response);
+}

@@ -156,6 +156,23 @@ export function deleteTopic(topicId) {
   return saveQuizTopics(topics.filter((topic) => topic.id !== topicId));
 }
 
+export function deleteQuestionFromTopic(topicId, questionId) {
+  const topics = loadQuizTopics();
+  const nextTopics = topics.map((topic) => {
+    if (topic.id !== topicId) return topic;
+
+    return {
+      ...topic,
+      questions: topic.questions.filter((question) => {
+        const currentQuestionId = question.questionId || question.id;
+        return currentQuestionId !== questionId;
+      }),
+    };
+  });
+
+  return saveQuizTopics(nextTopics);
+}
+
 export function getTopicById(topicId) {
   return loadQuizTopics().find((topic) => topic.id === topicId) || null;
 }

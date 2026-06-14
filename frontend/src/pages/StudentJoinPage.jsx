@@ -54,8 +54,19 @@ export default function StudentJoinPage() {
   return (
     <div className="landing-page">
       <form className="landing-card card join-card" onSubmit={handleSubmit}>
-        <h1>Join a Session</h1>
-        <p>Enter the lecturer join code. The app will check if the room exists before joining.</p>
+        <h1>Student Area</h1>
+        <p>Join a live class with a room code, or practice independently without a lecturer.</p>
+
+        <div className="student-entry-options">
+          <div className="student-entry-option active">
+            <strong>Join Live Class</strong>
+            <span>Use the lecturer room code to follow the live session.</span>
+          </div>
+          <Link className="student-entry-option practice-link" to="/student-practice">
+            <strong>Practice Alone</strong>
+            <span>Explore visualizations and answer practice questions independently.</span>
+          </Link>
+        </div>
 
         <label className="form-label">
           Nickname
@@ -83,7 +94,7 @@ export default function StudentJoinPage() {
         {error && <div className="message-box error-message">{error}</div>}
 
         <div className="landing-actions">
-          <button className="btn primary" type="submit" disabled={isChecking}>{isChecking ? 'Checking...' : 'Join'}</button>
+          <button className="btn primary" type="submit" disabled={isChecking}>{isChecking ? 'Checking...' : 'Join Live Class'}</button>
           <Link className="btn" to="/">Back Home</Link>
         </div>
       </form>

@@ -284,3 +284,31 @@ Run this short test immediately before a demo or submission:
 - [ ] Next Question works with database-loaded topics.
 - [ ] Update Live Quiz works with database-loaded topics.
 - [ ] If the database/API is unavailable, the frontend shows local fallback mode.
+
+## Step 20 — Student Practice Mode
+
+- [ ] Student page shows both `Join Live Class` and `Practice Alone` options.
+- [ ] Student can open Practice Alone without a room code.
+- [ ] Practice Mode opens without requiring a lecturer or live session.
+- [ ] Student can change concept, matrix, vectors, 2D/3D mode, and animation locally.
+- [ ] Practice changes are not sent to a live class and do not require Socket.io room join.
+- [ ] Practice Quiz loads topics from the server database when available.
+- [ ] Practice Quiz falls back to local quiz topics if the server library is unavailable.
+- [ ] Student can select a topic and question in Practice Quiz.
+- [ ] Check Answer shows Correct/Incorrect feedback locally.
+- [ ] Next Question works locally inside the selected topic.
+- [ ] Practice Quiz does not affect lecturer Live Quiz results or Student Answers Panel.
+- [ ] Existing Join Live Class flow still works with room code.
+- [ ] Lecturer Start Live Session and Live Quiz still work.
+
+## Step 20.1 — Targeted Delete and Export Cleanup QA
+
+- [ ] Lecturer can open **Manage Quiz Topics & Questions**.
+- [ ] Lecturer can select and delete a specific question.
+- [ ] Deleted question disappears after refresh when the server database is active.
+- [ ] Lecturer can select and delete a specific topic.
+- [ ] Deleted topic and its questions disappear after refresh when the server database is active.
+- [ ] Targeted deletion also works in local fallback mode if the database is unavailable.
+- [ ] Existing Live Quiz flow still works after deleting non-active topics/questions.
+- [ ] `Export snapshot` no longer appears in the Animation panel.
+- [ ] The app still builds and runs locally.
