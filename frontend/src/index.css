@@ -2991,3 +2991,70 @@ a.student-nav-button {
     transform-origin: left bottom;
   }
 }
+
+/* Step 20.37 — LaTeX support in quiz text */
+.latex-text {
+  display: inline;
+  white-space: pre-wrap;
+}
+
+.latex-inline-math {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.1em;
+}
+
+.latex-display-math {
+  display: block;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  text-align: center;
+}
+
+.quiz-q .latex-display-math,
+.quiz-opt .latex-display-math,
+.bar-row .latex-display-math {
+  text-align: inherit;
+}
+
+.latex-help-text {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.latex-help-text code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+.latex-preview-box {
+  border: 1px solid rgba(14, 165, 233, 0.18);
+  background: rgba(14, 165, 233, 0.06);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 8px 0 12px;
+  color: var(--text-main);
+}
+
+.latex-preview-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.latex-preview-options {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}

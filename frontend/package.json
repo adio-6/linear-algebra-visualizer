@@ -9,16 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "katex": "^0.16.47",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",
-    "zustand": "latest",
+    "socket.io-client": "latest",
     "three": "latest",
-    "@react-three/fiber": "latest",
-    "@react-three/drei": "latest",
-    "socket.io-client": "latest"
-  },
-  "devDependencies": {}
+    "vite": "latest",
+    "zustand": "latest"
+  }
 }

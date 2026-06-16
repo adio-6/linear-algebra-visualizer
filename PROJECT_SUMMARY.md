@@ -284,3 +284,5 @@ Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2�
 
 
 - Step 20.36: Updated the 3D Eigenvectors view to show the input vector v, the transformed vector A·v, a guide line through v, and Live Insight checks for collinearity/eigenvector status and λ.
+
+- Step 20.37: Added LaTeX support for quiz questions and answer options. Lecturer question entry now accepts inline `$...$`, `\(...\)`, and display `$$...$$` math, shows a live preview while writing, and renders LaTeX in lecturer, student live quiz, practice quiz, and result displays.
