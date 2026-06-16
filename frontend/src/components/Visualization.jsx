@@ -35,7 +35,9 @@ export default function Visualization({ role = 'lecturer', followLecturer = fals
 
   const det = currentDet(A);
   const areaScale = Math.abs(det);
-  const basisArea = Math.abs((v?.[0] ?? 0) * (u?.[1] ?? 0) - (v?.[1] ?? 0) * (u?.[0] ?? 0));
+  const basisDet = (u?.[0] ?? 0) * (v?.[1] ?? 0) - (u?.[1] ?? 0) * (v?.[0] ?? 0);
+  const basisArea = Math.abs(basisDet);
+  const matrixIsUsed = concept === 'transformation' || concept === 'determinant' || concept === 'eigen';
 
   useEffect(() => {
     const canvasWrap = canvasWrapRef.current;
@@ -74,22 +76,64 @@ export default function Visualization({ role = 'lecturer', followLecturer = fals
 
         {dim === 2 ? (
           <div className="viz-overlay d2-only">
-            <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-i)' }} /> î = A·(1,0)</div>
-            <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-j)' }} /> ĵ = A·(0,1)</div>
-            <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v → A·v</div>
-            {(concept === 'combination' || concept === 'span' || concept === 'basis') && (
-              <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-u)' }} /> u / combination</div>
+            {matrixIsUsed && (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-i)' }} /> î = A·(1,0)</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-j)' }} /> ĵ = A·(0,1)</div>
+              </>
             )}
+
+            {concept === 'combination' ? (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'rgba(79, 70, 229, 0.75)' }} /> v → βv</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'rgba(249, 115, 22, 0.78)' }} /> u → αu</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--accent)' }} /> αu + βv</div>
+              </>
+            ) : (concept === 'transformation' || concept === 'eigen') ? (
+              <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v → A·v</div>
+            ) : (concept === 'span' || concept === 'basis') ? (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-u)' }} /> u</div>
+                {concept === 'basis' && (
+                  <>
+                    <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--accent)' }} /> w = αu + βv</div>
+                    <div className="overlay-chip area-overlay-chip">det([u v]) = {Math.abs(basisDet) < 0.05 ? '≈ 0' : fmt(basisDet)}</div>
+                  </>
+                )}
+              </>
+            ) : null}
+
             {(concept === 'determinant' || concept === 'transformation') && (
               <div className="overlay-chip area-overlay-chip">AREA = {areaScale < 0.05 ? '≈ 0' : fmt(areaScale)}</div>
             )}
           </div>
         ) : (
           <div className="viz-overlay d3-only">
-            <div className="overlay-chip"><span className="swatch" style={{ background: '#ef4444' }} /> x · A·e₁</div>
-            <div className="overlay-chip"><span className="swatch" style={{ background: '#22c55e' }} /> y · A·e₂</div>
-            <div className="overlay-chip"><span className="swatch" style={{ background: '#3b82f6' }} /> z · A·e₃</div>
-            <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v → A·v</div>
+            {matrixIsUsed ? (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#ef4444' }} /> x · A·e₁</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#22c55e' }} /> y · A·e₂</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#3b82f6' }} /> z · A·e₃</div>
+                {(concept === 'transformation' || concept === 'eigen') && (
+                  <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v → A·v</div>
+                )}
+              </>
+            ) : concept === 'combination' ? (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#f97316' }} /> u → αu</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#4f46e5' }} /> v → βv</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#0ea5e9' }} /> αu+βv</div>
+              </>
+            ) : (concept === 'span' || concept === 'basis') ? (
+              <>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#4f46e5' }} /> v</div>
+                <div className="overlay-chip"><span className="swatch" style={{ background: '#f97316' }} /> u</div>
+                {concept === 'basis' && (
+                  <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--accent)' }} /> w = αu + βv</div>
+                )}
+              </>
+            ) : null}
           </div>
         )}
 
@@ -104,14 +148,6 @@ export default function Visualization({ role = 'lecturer', followLecturer = fals
         )}
       </div>
 
-      {concept === 'basis' && (
-        <div className="viz-stats-row">
-          <div className="viz-stat-card">
-            <div className="viz-stat-label">Basis area</div>
-            <div className="viz-stat-value">|det([v u])| = {basisArea < 0.05 ? '≈ 0' : fmt(basisArea)}</div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

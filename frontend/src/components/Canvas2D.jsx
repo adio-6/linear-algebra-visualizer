@@ -5,6 +5,10 @@ function getCSS(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
 
+function usesMatrixTransform(concept) {
+  return concept === 'transformation' || concept === 'determinant' || concept === 'eigen';
+}
+
 
 function finitePoint(point) {
   return Array.isArray(point) && point.length >= 2 && Number.isFinite(point[0]) && Number.isFinite(point[1]);
@@ -24,8 +28,6 @@ function computeAdaptiveWorldExtent(state, matrix) {
     [0, 1],
     [-1, 0],
     [0, -1],
-    state.v,
-    state.u,
   ];
 
   const basisPoints = [
@@ -39,11 +41,17 @@ function computeAdaptiveWorldExtent(state, matrix) {
 
   basisPoints.forEach((point) => points.push(matVec(matrix, point)));
 
-  if (finitePoint(state.v)) points.push(matVec(matrix, state.v));
-  if (finitePoint(state.u)) points.push(matVec(matrix, state.u));
+  if ((state.concept === 'transformation' || state.concept === 'eigen') && finitePoint(state.v)) {
+    points.push(state.v);
+    points.push(matVec(matrix, state.v));
+  }
 
-  if (finitePoint(state.v) && finitePoint(state.u)) {
-    points.push([state.v[0] + state.u[0], state.v[1] + state.u[1]]);
+  if ((state.concept === 'span' || state.concept === 'basis') && finitePoint(state.v) && finitePoint(state.u)) {
+    points.push(state.v, state.u, [state.v[0] + state.u[0], state.v[1] + state.u[1]]);
+  }
+
+  if (state.concept === 'combination' && finitePoint(state.v) && finitePoint(state.u)) {
+    points.push(state.v, state.u);
     points.push(linComb(state.alpha || 0, state.u, state.beta || 0, state.v));
     points.push([state.alpha * state.u[0], state.alpha * state.u[1]]);
     points.push([state.beta * state.v[0], state.beta * state.v[1]]);
@@ -79,7 +87,9 @@ export default function Canvas2D({ state }) {
 
       const t = typeof state.t === 'number' ? state.t : 1;
       const Mt = lerpMatrix(state.A, t);
-      const worldExtent = computeAdaptiveWorldExtent(state, Mt);
+      const matrixIsUsed = usesMatrixTransform(state.concept);
+      const displayMatrix = matrixIsUsed ? Mt : [[1, 0], [0, 1]];
+      const worldExtent = computeAdaptiveWorldExtent(state, displayMatrix);
       const manualZoom = Number.isFinite(state.canvas2DZoom) ? state.canvas2DZoom : 1;
       const unit = (Math.min(width, height) / (worldExtent * 2)) * manualZoom;
 
@@ -286,12 +296,15 @@ export default function Canvas2D({ state }) {
 
       const det = determinant(Mt);
 
-      ctx.save();
-      ctx.globalAlpha = 0.35;
-      drawGrid([[1, 0], [0, 1]]);
-      ctx.restore();
-
-      drawGrid(Mt, true);
+      if (matrixIsUsed) {
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        drawGrid([[1, 0], [0, 1]]);
+        ctx.restore();
+        drawGrid(Mt, true);
+      } else {
+        drawGrid([[1, 0], [0, 1]], true);
+      }
 
       if (state.concept === 'determinant' || state.concept === 'transformation') {
         let fill = 'rgba(79, 70, 229, 0.18)';
@@ -350,10 +363,12 @@ export default function Canvas2D({ state }) {
 
       }
 
-      const iHat = matVec(Mt, [1, 0]);
-      const jHat = matVec(Mt, [0, 1]);
-      drawArrow([0, 0], iHat, getCSS('--vec-i'), 4, 'î', { perp: -10, distance: 20 });
-      drawArrow([0, 0], jHat, getCSS('--vec-j'), 4, 'ĵ', { perp: 10, distance: 20 });
+      if (matrixIsUsed) {
+        const iHat = matVec(Mt, [1, 0]);
+        const jHat = matVec(Mt, [0, 1]);
+        drawArrow([0, 0], iHat, getCSS('--vec-i'), 4, 'î', { perp: -10, distance: 20 });
+        drawArrow([0, 0], jHat, getCSS('--vec-j'), 4, 'ĵ', { perp: 10, distance: 20 });
+      }
 
       if (state.concept === 'combination') {
         const au = [state.alpha * state.u[0], state.alpha * state.u[1]];
@@ -362,19 +377,24 @@ export default function Canvas2D({ state }) {
 
         drawArrow([0, 0], state.u, `${getCSS('--vec-u')}88`, 2, 'u', { perp: -14, distance: 18 });
         drawArrow([0, 0], state.v, `${getCSS('--vec-v')}88`, 2, 'v', { perp: 14, distance: 18 });
+        const combinationResultColor = getCSS('--accent');
         drawArrow([0, 0], au, getCSS('--vec-u'), 3, 'α·u', { perp: -16, distance: 22 });
         drawArrow(au, [au[0] + bv[0], au[1] + bv[1]], getCSS('--vec-v'), 3, 'β·v', { perp: 16, distance: 22 });
-        drawArrow([0, 0], sum, getCSS('--primary'), 4, 'αu+βv', { perp: -20, distance: 28 });
-      } else {
-        const Av = matVec(Mt, state.v);
-        if (t < 0.99) drawArrow([0, 0], state.v, `${getCSS('--vec-v')}55`, 2);
-        drawArrow([0, 0], Av, getCSS('--vec-v'), 4, 'A·v', { perp: -14, distance: 26 });
-
-        if (state.concept === 'span' || state.concept === 'basis') {
-          const Au = matVec(Mt, state.u);
-          drawArrow([0, 0], Au, getCSS('--vec-u'), 4, state.concept === 'basis' ? 'u' : 'A·u', { perp: 14, distance: 24 });
-          if (state.concept === 'basis') drawArrow([0, 0], state.v, getCSS('--vec-v'), 4, 'v', { perp: -14, distance: 24 });
+        drawArrow([0, 0], sum, combinationResultColor, 4, 'αu+βv', { perp: -20, distance: 28 });
+      } else if (state.concept === 'span' || state.concept === 'basis') {
+        drawArrow([0, 0], state.v, getCSS('--vec-v'), 4, 'v', { perp: -14, distance: 24 });
+        drawArrow([0, 0], state.u, getCSS('--vec-u'), 4, 'u', { perp: 14, distance: 24 });
+        if (state.concept === 'basis') {
+          const w = [state.alpha * state.u[0] + state.beta * state.v[0], state.alpha * state.u[1] + state.beta * state.v[1]];
+          drawArrow([0, 0], w, getCSS('--accent'), 4, 'w', { perp: -20, distance: 28 });
         }
+      } else if (state.concept === 'transformation' || state.concept === 'eigen') {
+        const Av = matVec(Mt, state.v);
+        const showInputVector = state.concept === 'eigen' || t < 0.99;
+        if (showInputVector) {
+          drawArrow([0, 0], state.v, `${getCSS('--vec-v')}88`, 3, 'v', { perp: 14, distance: 22 });
+        }
+        drawArrow([0, 0], Av, getCSS('--vec-v'), 4, 'A·v', { perp: -14, distance: 26 });
       }
     };
 

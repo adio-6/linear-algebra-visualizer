@@ -188,6 +188,7 @@ function Scene3D({ state }) {
     return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
   }, [Mt]);
 
+  const matrixIsUsed = state.concept === 'transformation' || state.concept === 'determinant' || state.concept === 'eigen';
   const iHat = useMemo(() => matVec3(Mt, [1, 0, 0]), [Mt]);
   const jHat = useMemo(() => matVec3(Mt, [0, 1, 0]), [Mt]);
   const kHat = useMemo(() => matVec3(Mt, [0, 0, 1]), [Mt]);
@@ -210,24 +211,34 @@ function Scene3D({ state }) {
         <TransformedUnitCube matrix={Mt} det={det} />
       )}
 
-      <VectorArrow vector={iHat} color="#ef4444" label="A·e₁" />
-      <VectorArrow vector={jHat} color="#22c55e" label="A·e₂" />
-      <VectorArrow vector={kHat} color="#3b82f6" label="A·e₃" />
+      {matrixIsUsed && (
+        <>
+          <VectorArrow vector={iHat} color="#ef4444" label="A·e₁" />
+          <VectorArrow vector={jHat} color="#22c55e" label="A·e₂" />
+          <VectorArrow vector={kHat} color="#3b82f6" label="A·e₃" />
+        </>
+      )}
 
       {state.concept === 'combination' ? (
         <>
           <VectorArrow vector={state.u} color="#f97316" label="u" opacity={0.65} />
           <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={0.65} />
+          <VectorArrow vector={scale3(state.u, state.alpha)} color="#f97316" label="αu" />
+          <VectorArrow vector={scale3(state.v, state.beta)} color="#4f46e5" label="βv" />
           <VectorArrow vector={combination} color="#0ea5e9" label="αu+βv" />
           <BasisParallelogram v={scale3(state.v, state.beta)} u={scale3(state.u, state.alpha)} color="#0ea5e9" />
         </>
-      ) : (
+      ) : (state.concept === 'transformation' || state.concept === 'eigen') ? (
         <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
-      )}
+      ) : null}
 
       {(state.concept === 'span' || state.concept === 'basis') && (
         <>
-          <VectorArrow vector={Au} color="#f97316" label={state.concept === 'basis' ? 'A·u' : 'A·u'} />
+          <VectorArrow vector={state.v} color="#4f46e5" label="v" />
+          <VectorArrow vector={state.u} color="#f97316" label="u" />
+          {state.concept === 'basis' && (
+            <VectorArrow vector={[state.alpha * state.u[0] + state.beta * state.v[0], state.alpha * state.u[1] + state.beta * state.v[1], state.alpha * state.u[2] + state.beta * state.v[2]]} color="#0ea5e9" label="w" />
+          )}
           <SpanLine3D vector={state.v} color="#4f46e5" />
           <SpanLine3D vector={state.u} color="#f97316" />
           <BasisParallelogram v={state.v} u={state.u} color="#0ea5e9" />

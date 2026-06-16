@@ -40,6 +40,8 @@ export default function VectorInput() {
   const setBeta = useVisualizerStore((s) => s.setBeta);
   const uRelevantConcepts = ['combination', 'span', 'basis'];
   const isURelevant = uRelevantConcepts.includes(concept);
+  const isVRelevant = concept !== 'determinant';
+  const areCoefficientsRelevant = !['determinant', 'eigen', 'span'].includes(concept);
 
   return (
     <div className="card-section vector-input-card">
@@ -51,6 +53,8 @@ export default function VectorInput() {
           labelClass="v"
           values={v}
           dim={dim}
+          disabled={!isVRelevant}
+          hint="v is not used in the determinant view."
           onChange={(index, value) => setVector('v', updateIndex(v, index, value))}
         />
 
@@ -65,7 +69,7 @@ export default function VectorInput() {
         />
       </div>
 
-      <div className="coef-row">
+      <div className={`coef-row ${!areCoefficientsRelevant ? 'coef-row-disabled' : ''}`}>
         <div className="coef-label">
           <span>α (alpha)</span>
           <code>{Number(alpha).toFixed(1)}</code>
@@ -76,11 +80,13 @@ export default function VectorInput() {
           max="3"
           step="1"
           value={alpha}
+          disabled={!areCoefficientsRelevant}
           onChange={(e) => setAlpha(Number(e.target.value))}
         />
+        {!areCoefficientsRelevant && <div className="coef-disabled-hint">α is not used in the determinant, eigenvector, or span/basis view.</div>}
       </div>
 
-      <div className="coef-row">
+      <div className={`coef-row ${!areCoefficientsRelevant ? 'coef-row-disabled' : ''}`}>
         <div className="coef-label">
           <span>β (beta)</span>
           <code>{Number(beta).toFixed(1)}</code>
@@ -91,8 +97,10 @@ export default function VectorInput() {
           max="3"
           step="1"
           value={beta}
+          disabled={!areCoefficientsRelevant}
           onChange={(e) => setBeta(Number(e.target.value))}
         />
+        {!areCoefficientsRelevant && <div className="coef-disabled-hint">β is not used in the determinant, eigenvector, or span/basis view.</div>}
       </div>
     </div>
   );

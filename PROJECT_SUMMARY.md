@@ -257,3 +257,27 @@ Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2�
 - Step 20.24: Moved the 2D `AREA = value` readout into the top-left canvas overlay so it stays close to the graph information without covering vectors or the parallelogram.
 
 - Step 20.25: Disabled and greyed out vector u in concepts where it is not mathematically relevant, while keeping it active for Linear Combination, Span/Basis, and Change of Basis.
+
+- Step 20.26: Separated the Linear Combination final vector color from the βv vector color for clearer Canvas2D interpretation.
+
+- Step 20.27: Updated Linear Combination legend/readout labels so the combination vector has its own matching accent color, and the Live Insight panel now shows additional u/αu/βv readouts with colors aligned to the graph.
+
+- Step 20.28: In Linear Combination, Matrix A is disabled because it is not part of the concept, basis vectors î/ĵ are hidden from the 2D graph, and Live Insight now shows only combination-relevant information.
+
+- Step 20.29: Disabled Matrix A in concepts where it is not mathematically relevant, and updated Span/Basis and Change of Basis visualizations and Live Insight to focus on u and v instead of matrix properties.
+
+- Step 20.30: Cleaned up the Determinant concept by disabling v/α/β inputs, removing A·v from determinant visualizations, and making Live Insight focus on determinant, area scaling, invertibility, and orientation reversal.
+
+
+- Step 20.31: In Eigenvectors, added the input vector v back onto the 2D graph as a semi-transparent purple reference vector, while α and β are now disabled because they are not used in this concept.
+
+- Step 20.32: Updated Span/Basis Live Insight so Vector Readout explicitly states `span{u,v} = line/R²` in 2D and the relevant spanned space in 3D, and disabled α/β controls in the Span/Basis concept.
+
+
+- Step 20.33: Updated Change of Basis to show u and v as the new basis B, added a sample vector w = u + v with [w]B = (1, 1), moved det([u v]) into the top-left graph overlay in 2D, and disabled α/β controls in this concept.
+
+
+- Step 20.34: Updated Change of Basis so w is computed as `w = αu + βv`, `[w]B` updates according to the current α/β values, and α/β controls are active in Change of Basis.
+
+
+- Step 20.35: Added **w = αu + βv** to the 3D legend in Change of Basis so the 3D overlay matches the vector shown in the scene and the 2D/readout explanations.

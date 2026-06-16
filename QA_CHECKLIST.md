@@ -418,3 +418,56 @@ Run this short test immediately before a demo or submission:
 
 - [ ] Verify vector u is greyed out and disabled in Linear Transformation, Determinant, Eigenvectors, and Abstract Vector Spaces.
 - [ ] Verify vector u remains editable in Linear Combination, Span/Basis, and Change of Basis.
+
+- [ ] In Linear Combination, verify that βv and αu+βv are drawn in clearly different colors.
+
+- [ ] In Linear Combination, verify that the top-left legend shows separate entries for `v → βv`, `u → αu`, and `αu + βv`.
+- [ ] Verify that the combination legend chip uses the same accent color as the final combination vector in the graph.
+- [ ] Verify that the Live Insight panel shows `u`, `αu`, `βv`, and `αu + βv` with colors matching the Canvas2D visualization.
+
+- [ ] In Linear Combination, verify that Matrix A inputs and presets are disabled and greyed out.
+- [ ] Verify that Matrix A still works normally in Linear Transformation and other matrix-based concepts.
+- [ ] In Linear Combination 2D, verify that î and ĵ are not drawn and not listed in the overlay.
+- [ ] Verify that Linear Combination Live Insight does not show det(A), invertibility, inverse matrix, or transformation type.
+- [ ] Verify that Linear Combination Live Insight shows α, β, u, v, αu, βv, and αu+βv.
+
+- [ ] Verify Matrix A is active in Linear Transformation, Determinant, and Eigenvectors.
+- [ ] Verify Matrix A is disabled in Linear Combination, Span/Basis, Change of Basis, and Abstract Vector Spaces.
+- [ ] Verify Span/Basis and Change of Basis Live Insight do not show det(A), invertibility, or A⁻¹.
+- [ ] Verify Span/Basis and Change of Basis visualizations use u and v directly, not A·u or A·v.
+- [ ] Verify Abstract Vector Spaces still allows editing its internal polynomial/function/matrix objects.
+
+- [ ] In Determinant, verify that vector v is greyed out and disabled.
+- [ ] In Determinant, verify that α and β are greyed out and disabled.
+- [ ] In Determinant, verify that A·v and its label do not appear on the graph.
+- [ ] In Determinant, verify that the graph still shows the determinant area/parallelogram.
+- [ ] In Determinant Live Insight, verify that det(A), AREA = |det(A)|, invertibility, and orientation reversal are displayed.
+- [ ] Verify that A·v still appears in Linear Transformation.
+
+
+- [ ] In Eigenvectors, verify that v appears on the 2D graph as a semi-transparent purple vector.
+- [ ] In Eigenvectors, verify that A·v still appears on the graph and can be visually compared to v.
+- [ ] In Eigenvectors, verify that α and β are greyed out and disabled.
+- [ ] Verify α and β remain editable in Linear Combination and other relevant concepts.
+
+- [ ] In Span/Basis 2D, verify Vector Readout shows `span{u,v} = R²` when u and v are independent.
+- [ ] In Span/Basis 2D, verify Vector Readout shows `span{u,v} = line` when u and v are dependent.
+- [ ] In Span/Basis 3D, verify Vector Readout shows the relevant spanned space, such as `plane in R³` or `line`.
+- [ ] Verify α and β are greyed out and disabled in Span/Basis.
+- [ ] Verify α and β remain active in Linear Combination.
+
+
+- [ ] In Change of Basis, verify B = {u, v} appears in Live Insight.
+- [ ] In Change of Basis, verify Basis valid? shows Yes/No based on whether u and v are independent.
+- [ ] In Change of Basis, verify span{u,v} shows R²/line in 2D and plane in R³/line/{0} in 3D.
+- [ ] In Change of Basis, verify vector w is drawn and labeled on the graph.
+- [ ] In Change of Basis, verify Vector Readout shows w and [w]B = (1, 1).
+- [ ] In Change of Basis 2D, verify det([u v]) appears in the top-left graph overlay and no longer appears as a separate card below the graph.
+- [ ] In Change of Basis, verify α and β are disabled and greyed out.
+
+
+- [ ] In Change of Basis, verify that changing α or β updates `w = αu + βv` on the graph.
+- [ ] In Change of Basis Live Insight, verify that `[w]B` changes with α and β instead of staying `(1, 1)`.
+- [ ] Verify that α and β are active in Change of Basis but still disabled in Span/Basis.
+
+- [ ] In **Change of Basis** with **3D** selected, the legend shows **u**, **v**, and **w = αu + βv**.
