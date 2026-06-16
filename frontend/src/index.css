@@ -307,6 +307,27 @@
     width: 100%;
   }
 
+  .vector-values-wrap {
+    min-width: 0;
+  }
+
+  .vector-row-disabled {
+    opacity: 0.52;
+  }
+
+  .vector-row-disabled .vec-input {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .vector-disabled-hint {
+    margin-top: 5px;
+    color: var(--text-subtle);
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
   .vec-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;

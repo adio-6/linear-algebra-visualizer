@@ -4,21 +4,25 @@ function updateIndex(arr, index, value) {
   return arr.map((cell, i) => (i === index ? Number(value) : cell));
 }
 
-function VectorRow({ label, labelClass, values, dim, onChange }) {
+function VectorRow({ label, labelClass, values, dim, onChange, disabled = false, hint = '' }) {
   return (
-    <div className="vector-row">
+    <div className={`vector-row ${disabled ? 'vector-row-disabled' : ''}`}>
       <span className={`vec-label ${labelClass}`}>{label}</span>
-      <div className="vector-values" aria-label={`${label} vector values`}>
-        {values.slice(0, dim).map((value, index) => (
-          <input
-            key={`${label}-${index}`}
-            className="vec-input"
-            type="number"
-            step="1"
-            value={value}
-            onChange={(e) => onChange(index, e.target.value)}
-          />
-        ))}
+      <div className="vector-values-wrap">
+        <div className="vector-values" aria-label={`${label} vector values`}>
+          {values.slice(0, dim).map((value, index) => (
+            <input
+              key={`${label}-${index}`}
+              className="vec-input"
+              type="number"
+              step="1"
+              value={value}
+              disabled={disabled}
+              onChange={(e) => onChange(index, e.target.value)}
+            />
+          ))}
+        </div>
+        {disabled && hint ? <div className="vector-disabled-hint">{hint}</div> : null}
       </div>
     </div>
   );
@@ -26,6 +30,7 @@ function VectorRow({ label, labelClass, values, dim, onChange }) {
 
 export default function VectorInput() {
   const dim = useVisualizerStore((s) => s.dim);
+  const concept = useVisualizerStore((s) => s.concept);
   const v = useVisualizerStore((s) => s.v);
   const u = useVisualizerStore((s) => s.u);
   const alpha = useVisualizerStore((s) => s.alpha);
@@ -33,6 +38,8 @@ export default function VectorInput() {
   const setVector = useVisualizerStore((s) => s.setVector);
   const setAlpha = useVisualizerStore((s) => s.setAlpha);
   const setBeta = useVisualizerStore((s) => s.setBeta);
+  const uRelevantConcepts = ['combination', 'span', 'basis'];
+  const isURelevant = uRelevantConcepts.includes(concept);
 
   return (
     <div className="card-section vector-input-card">
@@ -52,6 +59,8 @@ export default function VectorInput() {
           labelClass="u"
           values={u}
           dim={dim}
+          disabled={!isURelevant}
+          hint="u is used for combinations, span, and basis."
           onChange={(index, value) => setVector('u', updateIndex(u, index, value))}
         />
       </div>

@@ -255,3 +255,5 @@ Abstract Vector Spaces â†’ Matrices now lets the user edit the entries of the 2Ã
 - Step 20.23: Changed 2D mouse-wheel zoom so scrolling is prevented only while the pointer is over the 2D visualization; normal page scrolling works elsewhere.
 
 - Step 20.24: Moved the 2D `AREA = value` readout into the top-left canvas overlay so it stays close to the graph information without covering vectors or the parallelogram.
+
+- Step 20.25: Disabled and greyed out vector u in concepts where it is not mathematically relevant, while keeping it active for Linear Combination, Span/Basis, and Change of Basis.

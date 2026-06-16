@@ -415,3 +415,6 @@ Run this short test immediately before a demo or submission:
 - [ ] Verify that `AREA = value` appears in the top-left 2D graph overlay for Linear Transformation and Determinant.
 - [ ] Verify that `AREA = value` is not displayed as a separate card below the canvas.
 - [ ] Verify that 2D zoom buttons and mouse-wheel zoom still work.
+
+- [ ] Verify vector u is greyed out and disabled in Linear Transformation, Determinant, Eigenvectors, and Abstract Vector Spaces.
+- [ ] Verify vector u remains editable in Linear Combination, Span/Basis, and Change of Basis.
