@@ -281,3 +281,6 @@ Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2�
 
 
 - Step 20.35: Added **w = αu + βv** to the 3D legend in Change of Basis so the 3D overlay matches the vector shown in the scene and the 2D/readout explanations.
+
+
+- Step 20.36: Updated the 3D Eigenvectors view to show the input vector v, the transformed vector A·v, a guide line through v, and Live Insight checks for collinearity/eigenvector status and λ.

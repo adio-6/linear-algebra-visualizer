@@ -471,3 +471,6 @@ Run this short test immediately before a demo or submission:
 - [ ] Verify that α and β are active in Change of Basis but still disabled in Span/Basis.
 
 - [ ] In **Change of Basis** with **3D** selected, the legend shows **u**, **v**, and **w = αu + βv**.
+
+- [ ] In Eigenvectors 3D, verify that v appears as a semi-transparent vector, A·v appears as a solid vector, and a guide line is shown through v.
+- [ ] In Eigenvectors Live Insight, verify that collinearity/eigenvector status and λ update when v or Matrix A changes.

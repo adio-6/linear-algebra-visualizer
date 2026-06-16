@@ -29,18 +29,25 @@ function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1 }) {
 
   if (len < 1e-6) return null;
 
+  const arrow = new THREE.ArrowHelper(
+    new THREE.Vector3(dir[0], dir[1], dir[2]),
+    new THREE.Vector3(0, 0, 0),
+    len,
+    color,
+    Math.min(0.35, len * 0.22),
+    Math.min(0.2, len * 0.12),
+  );
+
+  arrow.traverse((object) => {
+    if (!object.material) return;
+    object.material.transparent = opacity < 1;
+    object.material.opacity = opacity;
+    object.material.depthWrite = opacity >= 1;
+  });
+
   return (
     <group>
-      <primitive
-        object={new THREE.ArrowHelper(
-          new THREE.Vector3(dir[0], dir[1], dir[2]),
-          new THREE.Vector3(0, 0, 0),
-          len,
-          color,
-          Math.min(0.35, len * 0.22),
-          Math.min(0.2, len * 0.12),
-        )}
-      />
+      <primitive object={arrow} />
       {label && (
         <Html position={[vector[0] * 1.06, vector[1] * 1.06, vector[2] * 1.06]} center>
           <span className="label3d" style={{ borderColor: color, color, opacity }}>{label}</span>
@@ -228,8 +235,14 @@ function Scene3D({ state }) {
           <VectorArrow vector={combination} color="#0ea5e9" label="αu+βv" />
           <BasisParallelogram v={scale3(state.v, state.beta)} u={scale3(state.u, state.alpha)} color="#0ea5e9" />
         </>
-      ) : (state.concept === 'transformation' || state.concept === 'eigen') ? (
+      ) : state.concept === 'transformation' ? (
         <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
+      ) : state.concept === 'eigen' ? (
+        <>
+          <SpanLine3D vector={state.v} color="#4f46e5" />
+          <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={0.45} />
+          <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
+        </>
       ) : null}
 
       {(state.concept === 'span' || state.concept === 'basis') && (
@@ -245,11 +258,6 @@ function Scene3D({ state }) {
         </>
       )}
 
-      {state.concept === 'eigen' && (
-        <Html position={[0, -3.7, 0]} center>
-          <span className="label3d note3d">3D eigenvectors will be expanded later; rotate the scene and inspect the transformed basis.</span>
-        </Html>
-      )}
     </>
   );
 }

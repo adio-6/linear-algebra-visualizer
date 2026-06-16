@@ -59,6 +59,27 @@ function spanSpaceLabel(u, v, dim) {
   return dim === 3 ? 'plane in R³' : 'R²';
 }
 
+function eigenTestInfo(v, Av, dim) {
+  const tolerance = 0.05;
+  const vv = v.slice(0, dim);
+  const av = Av.slice(0, dim);
+  const vNorm = vectorNorm(vv, dim);
+  const avNorm = vectorNorm(av, dim);
+
+  if (vNorm < tolerance || avNorm < tolerance) {
+    return { testable: false, collinear: false, lambda: null };
+  }
+
+  const denominator = vv.reduce((sum, value) => sum + value * value, 0);
+  const dot = vv.reduce((sum, value, index) => sum + value * av[index], 0);
+  const lambda = dot / denominator;
+  const residual = av.map((value, index) => value - lambda * vv[index]);
+  const residualNorm = vectorNorm(residual, dim);
+  const collinear = residualNorm <= tolerance * Math.max(1, avNorm);
+
+  return { testable: true, collinear, lambda };
+}
+
 function explanationFor(state, det, transformType) {
   if (state.concept === 'determinant') {
     if (Math.abs(det) < 0.05) {
@@ -223,6 +244,7 @@ export default function InsightPanel() {
   const alphaU = [state.alpha * state.u[0], state.alpha * state.u[1]];
   const betaV = [state.beta * state.v[0], state.beta * state.v[1]];
   const combination = linComb(state.alpha, state.u, state.beta, state.v);
+  const eigenTest = eigenTestInfo(state.v, Av, state.dim);
 
   if (state.concept === 'determinant') {
     const areaScale = Math.abs(det);
@@ -428,6 +450,22 @@ export default function InsightPanel() {
               <div className="k">Transformation type</div>
               <div className="v" style={{ fontSize: 13 }}>{transformType}</div>
             </div>
+            {state.concept === 'eigen' && (
+              <>
+                <div className="stat">
+                  <div className="k">v and A·v collinear?</div>
+                  <div className={`v ${eigenTest.collinear ? 'ok' : 'bad'}`}>{eigenTest.collinear ? 'Yes' : 'No'}</div>
+                </div>
+                <div className="stat">
+                  <div className="k">v is eigenvector?</div>
+                  <div className={`v ${eigenTest.collinear ? 'ok' : 'bad'}`}>{eigenTest.collinear ? 'Yes' : 'No'}</div>
+                </div>
+                <div className="stat" style={{ gridColumn: '1 / -1' }}>
+                  <div className="k">λ</div>
+                  <div className="v" style={{ fontSize: 13 }}>{eigenTest.collinear ? fmt(eigenTest.lambda) : 'not defined for this v'}</div>
+                </div>
+              </>
+            )}
           </div>
 
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 14 }}>
@@ -462,6 +500,12 @@ export default function InsightPanel() {
             ) : (
               <>
                 <div><span style={{ color: 'var(--vec-v)', fontWeight: 600 }}>A·v</span> = {formatVector(Av)}</div>
+                {state.concept === 'eigen' && (
+                  <>
+                    <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>v is eigenvector?</span> = {eigenTest.collinear ? 'Yes' : 'No'}</div>
+                    <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>λ</span> = {eigenTest.collinear ? fmt(eigenTest.lambda) : 'not defined'}</div>
+                  </>
+                )}
                 {(state.concept === 'span' || state.concept === 'basis') && (
                   <>
                     <div><span style={{ color: 'rgba(249, 115, 22, 0.78)', fontWeight: 600 }}>u</span> = {formatVector(state.u)}</div>

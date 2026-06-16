@@ -115,8 +115,15 @@ export default function Visualization({ role = 'lecturer', followLecturer = fals
                 <div className="overlay-chip"><span className="swatch" style={{ background: '#ef4444' }} /> x · A·e₁</div>
                 <div className="overlay-chip"><span className="swatch" style={{ background: '#22c55e' }} /> y · A·e₂</div>
                 <div className="overlay-chip"><span className="swatch" style={{ background: '#3b82f6' }} /> z · A·e₃</div>
-                {(concept === 'transformation' || concept === 'eigen') && (
+                {concept === 'transformation' && (
                   <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> v → A·v</div>
+                )}
+                {concept === 'eigen' && (
+                  <>
+                    <div className="overlay-chip"><span className="swatch" style={{ background: 'rgba(79, 70, 229, 0.45)' }} /> v</div>
+                    <div className="overlay-chip"><span className="swatch" style={{ background: 'var(--vec-v)' }} /> A·v</div>
+                    <div className="overlay-chip"><span className="swatch" style={{ background: 'rgba(79, 70, 229, 0.75)' }} /> line through v</div>
+                  </>
                 )}
               </>
             ) : concept === 'combination' ? (
