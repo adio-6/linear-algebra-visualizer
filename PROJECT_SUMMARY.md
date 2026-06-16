@@ -6,7 +6,7 @@ The project is an interactive classroom system for visualizing linear algebra co
 
 ## Step 1–5: Frontend and Visualization
 
-The first stages built the frontend foundation using React and Vite. The interface was split into reusable components such as the header, concept selector, matrix/vector input panels, animation controls, visualization area, insight panel, quiz card, roadmap, and footer.
+The first stages built the frontend foundation using React and Vite. The interface was split into reusable components such as the header, concept selector, matrix/vector input panels, animation controls, visualization area, insight panel, quiz card, and footer.
 
 The math logic was connected to real linear algebra calculations such as matrix-vector multiplication, determinant, inverse, linear combinations, and transformation interpretation. Canvas2D was added for two-dimensional visualization, including grids, transformed basis vectors, determinant area, vector combinations, span, and animation. Later, Canvas3D was added with React Three Fiber and Three.js to support 3D axes, basis vectors, transformations, camera controls, and visual exploration.
 
@@ -88,16 +88,14 @@ Because rooms are stored in memory, restarting the backend deletes existing room
 
 ## Current limitations
 
-The current system is intentionally still lightweight:
+The current system is intentionally still lightweight in several areas:
 
-- no database
 - no login/authentication
-- no persistent quiz history
-- no grade storage
-- no export tools
-- no deployment setup
+- no persistent student grade history
+- no classroom history management
+- no export snapshot feature in the final UI
 
-These limitations are acceptable for the current prototype because the focus is on real-time visualization and classroom interaction.
+These limitations are acceptable for the current project scope because the focus is on visualization, live classroom interaction, quiz management, database-backed quiz storage, and independent student practice.
 
 ## Current status
 
@@ -197,3 +195,63 @@ The practice page also includes a Practice Quiz panel that loads quiz topics fro
 This cleanup step added targeted delete controls to the lecturer quiz builder. The lecturer can now delete a selected topic, including its questions, or delete a selected question from a selected topic. The feature works with the PostgreSQL-backed server quiz library and also with the local fallback library if the database is unavailable. The old `Reset Local Fallback Library` control was removed from the visible UI to avoid accidental deletion of broad sets of questions.
 
 The unused `Export snapshot` control was also removed from the animation panel, and the related roadmap item was removed because that feature was not implemented and is not part of the current project scope.
+
+## Step 20.2 — Roadmap Panel Removal
+
+The old `Future Full App · Roadmap` panel was removed from the lecturer view because it described early planned prototype features rather than the current final product. The related React component import, visible panel, and unused Roadmap styling were removed so the final UI stays focused on the implemented project features: live sessions, visualization, quiz management, database-backed quiz library, and student practice mode.
+
+## Step 20.3 — Compact Add Topic Form Layout
+
+The lecturer Quiz Builder layout was refined so the Add New Topic form remains compact and aligned at the top of the management panel. The form controls no longer stretch vertically in wide/full-screen layouts, improving readability and usability while preserving the existing quiz topic and question management features.
+
+## Step 20.4 — Abstract Vector Spaces Visualization
+
+Added a new `Abstract Vector Spaces` concept that visualizes vector spaces beyond arrows in R² and R³. The new mode demonstrates that polynomials, functions and matrices can behave as vectors when addition and scalar multiplication are defined. The user can choose an abstract space, change scalar coefficients α and β, and observe the resulting linear combination. The lecturer can also present this mode during a live session because the selected abstract space is included in the synchronized visualization state.
+
+
+## Step 20.5 — Editable Polynomial Objects
+
+The Abstract Vector Spaces visualization was expanded so the polynomial objects are no longer fixed examples. Users can edit the coefficients of p(x) and q(x), adjust α and β, and immediately see the resulting linear combination. This makes the abstract vector space demonstration more interactive and reinforces the idea that polynomials can be represented as coefficient vectors.
+
+## Step 20.6 — Polynomial Graph Visualization
+
+The Abstract Vector Spaces polynomial view was expanded with a graph visualization. In Polynomials mode, the app now displays the curves for `p(x)`, `q(x)`, and `r(x) = αp(x) + βq(x)` over a fixed x-range. The graph updates immediately when the user changes polynomial coefficients or scalar values α and β. This adds a visual layer to the abstract vector space example and helps connect coefficient-based algebraic operations with the graphical behavior of the resulting polynomial.
+
+## Step 20.7 — Polynomial Graph Colors and RTL Explanations
+
+- Updated the polynomial graph legend and curves so `p(x)`, `q(x)`, and `r(x) = αp(x) + βq(x)` use clearly distinguishable colors.
+- Added RTL styling for Hebrew explanation text in the Abstract Vector Spaces insight panel.
+- No backend logic was changed.
+
+## Step 20.8 — Greek Coefficient Labels
+
+The Abstract Vector Spaces insight panel was updated so the scalar labels appear as the mathematical symbols `α` and `β` rather than being transformed visually into `A` and `B` by uppercase styling. This improves consistency with the formula `r(x) = αp(x) + βq(x)` and makes the interface clearer for students.
+
+- Step 20.9: Improved polynomial editor layout so p(x) and q(x) appear side by side on wider screens and stack responsively on narrower screens.
+
+- Step 20.10: Widened the editable polynomial coefficient inputs so numeric values are clearly visible in the side-by-side layout.
+
+- Step 20.11: Fixed the polynomial coefficient editor so input boxes stay inside the p(x)/q(x) cards while the two polynomial panels remain side by side on wider screens.
+
+- Step 20.12: Added a Function Pair selector for Abstract Vector Spaces → Functions. The user can now choose sin/cos, exponential growth/decay, or Gaussian-like function pairs. Polynomial pairs were not added under Functions because they are handled in the dedicated Polynomials view.
+
+
+## Step 20.13 — Editable Matrix Objects
+
+Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2×2 matrices A and B. The result matrix αA + βB updates immediately, and the values are included in the live sync snapshot so lecturer changes can appear on student screens.
+
+- Step 20.14: Updated the editable matrix input UI in Abstract Vector Spaces to a bracket-style 2×2 matrix layout.
+
+- Step 20.15: Fixed the editable matrix input layout so Matrix A and Matrix B stay inside their card and do not overflow on narrow panels.
+- Step 20.17: Updated polynomial coefficient inputs and abstract matrix entry inputs so number arrows increment by 1 instead of 0.5.
+- Step 20.18: Updated the main matrix and vector number inputs so browser arrow controls change values by 1 instead of 0.1.
+
+- Step 20.19: Added adaptive 2D canvas zoom so larger matrix entries, including values up to about 8 in common demonstrations, remain visible in the visualization instead of leaving the canvas.
+
+- Step 20.20: Added manual 2D zoom controls on top of the adaptive Canvas2D scaling so users can zoom in/out when labels become too small.
+
+- Step 20.22: Updated the 2D area display to show `AREA = value` instead of determinant notation, and added mouse wheel zoom support for the 2D canvas.
+
+- Step 20.23: Changed 2D mouse-wheel zoom so scrolling is prevented only while the pointer is over the 2D visualization; normal page scrolling works elsewhere.
+
+- Step 20.24: Moved the 2D `AREA = value` readout into the top-left canvas overlay so it stays close to the graph information without covering vectors or the parallelogram.

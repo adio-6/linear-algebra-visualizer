@@ -4,10 +4,10 @@ import ConceptSelector from '../components/ConceptSelector.jsx';
 import MatrixInput from '../components/MatrixInput.jsx';
 import VectorInput from '../components/VectorInput.jsx';
 import AnimationControls from '../components/AnimationControls.jsx';
+import AbstractSpaceControls from '../components/AbstractSpaceControls.jsx';
 import Visualization from '../components/Visualization.jsx';
 import InsightPanel from '../components/InsightPanel.jsx';
 import QuizCard from '../components/QuizCard.jsx';
-import Roadmap from '../components/Roadmap.jsx';
 import Footer from '../components/Footer.jsx';
 import { useVisualizerStore } from '../store/useVisualizerStore.js';
 import { checkRoom, createRoom } from '../api/roomsApi.js';
@@ -21,6 +21,7 @@ function defaultPresence() {
 
 export default function LecturerPage() {
   const dim = useVisualizerStore((s) => s.dim);
+  const concept = useVisualizerStore((s) => s.concept);
   const [joinCode, setJoinCode] = useState('');
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isRecoveringRoom, setIsRecoveringRoom] = useState(false);
@@ -288,9 +289,15 @@ export default function LecturerPage() {
         <aside className="left-panel control-panel">
           <div className="card">
             <ConceptSelector />
-            <MatrixInput />
-            <VectorInput />
-            <AnimationControls onAnimate={handleLecturerAnimate} />
+            {concept === 'abstract' ? (
+              <AbstractSpaceControls />
+            ) : (
+              <>
+                <MatrixInput />
+                <VectorInput />
+                <AnimationControls onAnimate={handleLecturerAnimate} />
+              </>
+            )}
           </div>
         </aside>
 
@@ -301,7 +308,6 @@ export default function LecturerPage() {
       <div className="page-section-wrap">
         <QuizCard joinCode={roomExpired ? '' : joinCode} />
       </div>
-      <Roadmap />
       <Footer />
     </div>
   );

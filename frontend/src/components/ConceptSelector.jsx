@@ -7,6 +7,7 @@ const concepts = [
   { key: 'eigen', icon: 'λ', label: 'Eigenvectors' },
   { key: 'span', icon: '⇿', label: 'Span / Basis' },
   { key: 'basis', icon: '⊞', label: 'Change of Basis' },
+  { key: 'abstract', icon: '◫', label: 'Abstract Vector Spaces' },
 ];
 
 export default function ConceptSelector() {

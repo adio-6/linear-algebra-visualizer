@@ -61,9 +61,20 @@ const defaultCamera3D = {
   zoom: 1,
 };
 
+const defaultPolynomialP = [1, 2, 0];
+const defaultPolynomialQ = [0, 1, -1];
+const defaultAbstractMatrixA = [[1, 2], [0, 1]];
+const defaultAbstractMatrixB = [[0, 1], [3, -1]];
+
 const initialState = {
   dim: 2,
   concept: 'transformation',
+  abstractSpace: 'polynomials',
+  functionPair: 'trig',
+  polynomialP: [...defaultPolynomialP],
+  polynomialQ: [...defaultPolynomialQ],
+  abstractMatrixA: cloneMatrix(defaultAbstractMatrixA),
+  abstractMatrixB: cloneMatrix(defaultAbstractMatrixB),
   A: cloneMatrix(default2D.A),
   v: [...default2D.v],
   u: [...default2D.u],
@@ -72,10 +83,11 @@ const initialState = {
   t: 1,
   animSpeed: 1,
   camera3D: { ...defaultCamera3D },
+  canvas2DZoom: 1,
   dimCache: initialCache,
 };
 
-const syncKeys = ['dim', 'concept', 'A', 'v', 'u', 'alpha', 'beta', 't', 'animSpeed', 'camera3D'];
+const syncKeys = ['dim', 'concept', 'abstractSpace', 'functionPair', 'polynomialP', 'polynomialQ', 'abstractMatrixA', 'abstractMatrixB', 'A', 'v', 'u', 'alpha', 'beta', 't', 'animSpeed', 'camera3D', 'canvas2DZoom'];
 
 function createDimCacheFromState(state) {
   const current = {
@@ -124,6 +136,26 @@ export const useVisualizerStore = create((set, get) => ({
   }),
 
   setConcept: (concept) => set({ concept, t: 1 }),
+  setAbstractSpace: (abstractSpace) => set({ abstractSpace }),
+  setFunctionPair: (functionPair) => set({ functionPair }),
+  setPolynomialCoeff: (which, index, value) => set((state) => {
+    const key = which === 'q' ? 'polynomialQ' : 'polynomialP';
+    const next = [...state[key]];
+    next[index] = Number.isFinite(value) ? value : 0;
+    return { [key]: next };
+  }),
+  setAbstractMatrixEntry: (which, rowIndex, colIndex, value) => set((state) => {
+    const key = which === 'b' ? 'abstractMatrixB' : 'abstractMatrixA';
+    const next = cloneMatrix(state[key]);
+    next[rowIndex][colIndex] = Number.isFinite(value) ? value : 0;
+    return { [key]: next };
+  }),
+  resetAbstractObjects: () => set({
+    polynomialP: [...defaultPolynomialP],
+    polynomialQ: [...defaultPolynomialQ],
+    abstractMatrixA: cloneMatrix(defaultAbstractMatrixA),
+    abstractMatrixB: cloneMatrix(defaultAbstractMatrixB),
+  }),
   setMatrix: (A) => set({ A: cloneMatrix(A), t: 1 }),
   setVector: (key, value) => set({ [key]: [...value], t: 1 }),
   setAlpha: (alpha) => set({ alpha }),
@@ -131,13 +163,22 @@ export const useVisualizerStore = create((set, get) => ({
   setT: (t) => set({ t }),
   setAnimSpeed: (animSpeed) => set({ animSpeed }),
   setCamera3D: (camera3D) => set({ camera3D: cloneValue(camera3D) }),
+  setCanvas2DZoom: (canvas2DZoom) => set({ canvas2DZoom: Math.max(0.5, Math.min(3, Number(canvas2DZoom) || 1)) }),
+  zoomIn2D: () => set((state) => ({ canvas2DZoom: Math.min(3, Number((state.canvas2DZoom + 0.2).toFixed(2))) })),
+  zoomOut2D: () => set((state) => ({ canvas2DZoom: Math.max(0.5, Number((state.canvas2DZoom - 0.2).toFixed(2))) })),
+  resetZoom2D: () => set({ canvas2DZoom: 1 }),
 
   resetState: () => set({
     ...initialState,
     A: cloneMatrix(default2D.A),
     v: [...default2D.v],
     u: [...default2D.u],
+    polynomialP: [...defaultPolynomialP],
+    polynomialQ: [...defaultPolynomialQ],
+    abstractMatrixA: cloneMatrix(defaultAbstractMatrixA),
+    abstractMatrixB: cloneMatrix(defaultAbstractMatrixB),
     camera3D: { ...defaultCamera3D },
+    canvas2DZoom: 1,
     dimCache: {
       2: cloneDimState(default2D),
       3: cloneDimState(default3D),
@@ -156,6 +197,12 @@ export const useVisualizerStore = create((set, get) => ({
     return {
       dim: state.dim,
       concept: state.concept,
+      abstractSpace: state.abstractSpace,
+      functionPair: state.functionPair,
+      polynomialP: cloneValue(state.polynomialP),
+      polynomialQ: cloneValue(state.polynomialQ),
+      abstractMatrixA: cloneValue(state.abstractMatrixA),
+      abstractMatrixB: cloneValue(state.abstractMatrixB),
       A: cloneValue(state.A),
       v: cloneValue(state.v),
       u: cloneValue(state.u),
@@ -164,6 +211,7 @@ export const useVisualizerStore = create((set, get) => ({
       t: state.t,
       animSpeed: state.animSpeed,
       camera3D: cloneValue(state.camera3D),
+      canvas2DZoom: state.canvas2DZoom,
     };
   },
 

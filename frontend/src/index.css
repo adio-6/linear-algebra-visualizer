@@ -461,6 +461,11 @@
   .swatch {
     width: 10px; height: 10px; border-radius: 3px;
   }
+  .area-overlay-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: var(--primary);
+  }
   .viz-overlay-right {
     position: absolute;
     top: 12px; right: 12px;
@@ -486,13 +491,44 @@
   }
   .det-readout .val {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     margin-top: 2px;
   }
   .det-readout .val.danger { color: var(--danger); }
   .det-readout .val.warning { color: var(--warning); }
   .det-readout .val.ok { color: var(--success); }
+
+.viz-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px 0;
+}
+
+.viz-stat-card {
+  min-width: 180px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.viz-stat-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.viz-stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
 
   /* ---------- Right panel ---------- */
   .stat-grid {
@@ -511,6 +547,13 @@
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+
+  .stat .k.greek-label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 700;
   }
   .stat .v {
     font-family: 'JetBrains Mono', monospace;
@@ -556,6 +599,14 @@
     line-height: 1.55;
   }
   .explanation strong { color: var(--primary); }
+
+/* Hebrew explanatory text in abstract spaces should read right-to-left. */
+.rtl-explanation {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
 
   /* ---------- Quiz / feedback ---------- */
   .quiz-card {
@@ -690,25 +741,6 @@
   }
   .axis-legend .overlay-chip { background: rgba(255,255,255,0.92); }
 
-  /* ---------- Roadmap ---------- */
-  .roadmap-card { margin: 0 28px 24px 28px; }
-  .roadmap-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  @media (max-width: 1100px) { .roadmap-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 700px)  { .roadmap-grid { grid-template-columns: 1fr; } }
-  .roadmap-item {
-    padding: 14px 14px 16px 14px;
-    background: var(--surface-2);
-    border: 1px dashed var(--border-strong);
-    border-radius: 12px;
-  }
-  .ri-icon { font-size: 18px; margin-bottom: 6px; }
-  .ri-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .ri-body  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-
   footer.foot {
     text-align: center;
     font-size: 11.5px;
@@ -731,7 +763,7 @@
 .viz-placeholder strong {
   display: block;
   color: var(--text);
-  font-size: 18px;
+  font-size: 17px;
   margin-bottom: 6px;
 }
 
@@ -920,7 +952,7 @@
 .live-session-card h1,
 .student-practice-banner h1 {
   margin: 0 0 4px 0;
-  font-size: 18px;
+  font-size: 17px;
   letter-spacing: -0.01em;
 }
 .live-session-card p,
@@ -947,7 +979,7 @@
   font-size: 14px;
 }
 .join-code-display strong {
-  font-size: 18px;
+  font-size: 17px;
   letter-spacing: 0.08em;
 }
 .form-error {
@@ -1602,6 +1634,14 @@ button:disabled {
   }
 
   .live-session-card,
+  .viz-stats-row {
+    padding: 10px 12px 0;
+  }
+
+  .viz-stat-card {
+    width: 100%;
+  }
+
   .student-practice-banner,
   .quiz-card,
   .student-live-quiz-card {
@@ -1679,6 +1719,14 @@ button:disabled {
   }
 
   .live-session-card,
+  .viz-stats-row {
+    padding: 10px 12px 0;
+  }
+
+  .viz-stat-card {
+    width: 100%;
+  }
+
   .student-practice-banner,
   .quiz-card,
   .student-live-quiz-card {
@@ -1723,6 +1771,14 @@ button:disabled {
 
   .det-readout .val {
     font-size: 15px;
+  }
+
+  .viz-stats-row {
+    padding: 10px 12px 0;
+  }
+
+  .viz-stat-card {
+    width: 100%;
   }
 
   .student-practice-banner,
@@ -2218,5 +2274,659 @@ a.student-nav-button {
 @media (max-width: 1100px) {
   .quiz-delete-management {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Step 20.3: Compact quiz topic form layout ---------- */
+.quiz-management-grid {
+  align-items: start;
+}
+
+.quiz-builder-form {
+  align-content: start;
+  align-self: start;
+}
+
+.quiz-builder-form .btn {
+  min-height: 42px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.quiz-builder-form .field-group input,
+.quiz-builder-form .field-group select {
+  min-height: 42px;
+}
+
+/* ---------- Step 20.4: Abstract Vector Spaces ---------- */
+.abstract-space-tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.abstract-space-tabs button {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-main);
+  padding: 10px 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.abstract-space-tabs button.active {
+  border-color: rgba(79, 70, 229, 0.55);
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--primary);
+}
+
+.abstract-help-text {
+  margin: 10px 0 14px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.abstract-viz-card {
+  min-height: 520px;
+}
+
+.abstract-viz-wrap {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.abstract-core-statement {
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  background: rgba(79, 70, 229, 0.07);
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.abstract-badge {
+  display: inline-flex;
+  margin-right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.abstract-object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.abstract-object-card,
+.function-plot-card,
+.abstract-message,
+.abstract-insight-callout {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+.abstract-object-card {
+  min-height: 96px;
+  padding: 14px;
+}
+
+.abstract-object-title {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.abstract-object-body {
+  color: var(--text-main);
+  font-family: JetBrains Mono, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.abstract-message {
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.function-plot-card {
+  padding: 12px;
+}
+
+.function-plot-card svg {
+  width: 100%;
+  min-height: 170px;
+  display: block;
+  overflow: visible;
+}
+
+.plot-axis {
+  stroke: rgba(100, 116, 139, 0.35);
+  stroke-width: 1;
+}
+
+.plot-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.plot-f { stroke: #f97316; }
+.plot-g { stroke: #0ea5e9; }
+.plot-h { stroke: #16a34a; stroke-width: 4; }
+
+.plot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.legend-dot.f { background: #f97316; }
+.legend-dot.g { background: #0ea5e9; }
+.legend-dot.h { background: #16a34a; }
+
+.abstract-matrix-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 0;
+}
+
+.abstract-matrix-box {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.abstract-matrix-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.abstract-mini-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, 54px);
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.abstract-mini-matrix span {
+  display: grid;
+  place-items: center;
+  min-height: 38px;
+  border-radius: 10px;
+  background: white;
+  color: var(--text-main);
+  font-family: JetBrains Mono, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.abstract-operator {
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.abstract-insight-callout {
+  padding: 12px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .abstract-object-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .abstract-mini-matrix {
+    grid-template-columns: repeat(2, 44px);
+  }
+}
+
+/* ---------- Step 20.5: Editable Polynomial Objects ---------- */
+.poly-editor-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  padding: 12px;
+  margin: 12px 0 14px;
+}
+
+.poly-editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.poly-editor-header p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.small-title {
+  margin-bottom: 0;
+  font-size: 11px;
+}
+
+.poly-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.poly-editor-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px dashed rgba(100, 116, 139, 0.28);
+  border-radius: 14px;
+  background: white;
+}
+
+.poly-editor-name {
+  color: var(--primary);
+  font-family: JetBrains Mono, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.poly-coef-field {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.poly-coef-field input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .poly-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-small {
+  min-height: 32px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+/* ---------- Step 20.6: Polynomial Graph Visualization ---------- */
+.polynomial-plot-card {
+  display: grid;
+  gap: 8px;
+}
+
+.plot-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.plot-caption {
+  margin-top: -4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.polynomial-plot-card svg {
+  min-height: 190px;
+}
+
+/* ---------- Step 20.12: Function pair selector ---------- */
+.function-pair-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+  padding: 12px;
+  margin: 12px 0 14px;
+}
+
+.function-pair-field {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.function-pair-field select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: white;
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+
+/* ---------- Step 20.13: Editable Matrix Objects ---------- */
+.matrix-editor-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  padding: 12px;
+  margin: 12px 0 14px;
+}
+
+.matrix-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.matrix-editor-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px dashed rgba(100, 116, 139, 0.28);
+  border-radius: 14px;
+  background: white;
+}
+
+.matrix-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.matrix-entry-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.matrix-entry-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .matrix-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ---------- Step 20.14: Matrix Input Bracket Layout ---------- */
+.matrix-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.matrix-object-editor {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 0 2px;
+}
+
+.matrix-object-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.matrix-object-header span:last-child {
+  color: var(--text-subtle);
+  font-family: JetBrains Mono, Consolas, monospace;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.matrix-object-bracket {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 24px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.matrix-object-bracket::before,
+.matrix-object-bracket::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.matrix-object-bracket::before {
+  left: 0;
+  border-left: 4px solid var(--text-main);
+  border-top: 4px solid var(--text-main);
+  border-bottom: 4px solid var(--text-main);
+}
+
+.matrix-object-bracket::after {
+  right: 0;
+  border-right: 4px solid var(--text-main);
+  border-top: 4px solid var(--text-main);
+  border-bottom: 4px solid var(--text-main);
+}
+
+.matrix-object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.matrix-object-cell {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  color: var(--text-main);
+  text-align: center;
+  font-family: JetBrains Mono, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 900;
+  box-sizing: border-box;
+}
+
+.matrix-object-cell:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+@media (max-width: 1200px) {
+  .matrix-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .matrix-object-bracket {
+    padding: 8px 18px;
+  }
+
+  .matrix-object-grid {
+    grid-template-columns: repeat(2, minmax(52px, 1fr));
+    gap: 8px;
+  }
+
+  .matrix-object-cell {
+    min-height: 46px;
+    font-size: 15px;
+  }
+}
+
+
+/* ---------- Step 20.15: Matrix editor containment fix ---------- */
+.matrix-editor-card {
+  overflow: hidden;
+}
+
+.matrix-editor-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+
+.matrix-object-editor,
+.matrix-object-bracket,
+.matrix-object-grid {
+  max-width: 100%;
+}
+
+.matrix-object-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.matrix-object-cell {
+  max-width: 100%;
+  padding: 8px 6px;
+}
+
+@media (max-width: 640px) {
+  .matrix-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .matrix-object-cell {
+    min-height: 44px;
+    font-size: 15px;
+  }
+}
+
+/* ---------- Step 20.20: 2D zoom controls ---------- */
+.zoom-2d-controls {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.zoom-2d-controls button {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--text-main);
+  min-width: 34px;
+  min-height: 30px;
+  padding: 4px 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.zoom-2d-controls button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.zoom-2d-controls span {
+  min-width: 44px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 900;
+  font-family: JetBrains Mono, Consolas, monospace;
+}
+
+@media (max-width: 720px) {
+  .zoom-2d-controls {
+    left: 10px;
+    bottom: 10px;
+    transform: scale(0.92);
+    transform-origin: left bottom;
   }
 }

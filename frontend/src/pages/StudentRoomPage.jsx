@@ -5,6 +5,7 @@ import ConceptSelector from '../components/ConceptSelector.jsx';
 import MatrixInput from '../components/MatrixInput.jsx';
 import VectorInput from '../components/VectorInput.jsx';
 import AnimationControls from '../components/AnimationControls.jsx';
+import AbstractSpaceControls from '../components/AbstractSpaceControls.jsx';
 import Visualization from '../components/Visualization.jsx';
 import InsightPanel from '../components/InsightPanel.jsx';
 import Footer from '../components/Footer.jsx';
@@ -32,6 +33,7 @@ export default function StudentRoomPage() {
   const { code } = useParams();
   const joinCode = normalizeJoinCode(code);
   const dim = useVisualizerStore((s) => s.dim);
+  const concept = useVisualizerStore((s) => s.concept);
   const applyRemotePatch = useVisualizerStore((s) => s.applyRemotePatch);
   const setCamera3D = useVisualizerStore((s) => s.setCamera3D);
   const [nickname] = useState(getStoredNickname);
@@ -320,9 +322,15 @@ export default function StudentRoomPage() {
           <aside className="left-panel control-panel">
             <div className="card">
               <ConceptSelector />
-              <MatrixInput />
-              <VectorInput />
-              <AnimationControls />
+              {concept === 'abstract' ? (
+                <AbstractSpaceControls />
+              ) : (
+                <>
+                  <MatrixInput />
+                  <VectorInput />
+                  <AnimationControls />
+                </>
+              )}
             </div>
           </aside>
         )}

@@ -5,6 +5,7 @@ import ConceptSelector from '../components/ConceptSelector.jsx';
 import MatrixInput from '../components/MatrixInput.jsx';
 import VectorInput from '../components/VectorInput.jsx';
 import AnimationControls from '../components/AnimationControls.jsx';
+import AbstractSpaceControls from '../components/AbstractSpaceControls.jsx';
 import Visualization from '../components/Visualization.jsx';
 import InsightPanel from '../components/InsightPanel.jsx';
 import Footer from '../components/Footer.jsx';
@@ -13,6 +14,7 @@ import { useVisualizerStore } from '../store/useVisualizerStore.js';
 
 export default function StudentPracticePage() {
   const dim = useVisualizerStore((s) => s.dim);
+  const concept = useVisualizerStore((s) => s.concept);
 
   useEffect(() => {
     document.body.classList.toggle('dim-3', dim === 3);
@@ -40,9 +42,15 @@ export default function StudentPracticePage() {
         <aside className="left-panel control-panel">
           <div className="card">
             <ConceptSelector />
-            <MatrixInput />
-            <VectorInput />
-            <AnimationControls />
+            {concept === 'abstract' ? (
+              <AbstractSpaceControls />
+            ) : (
+              <>
+                <MatrixInput />
+                <VectorInput />
+                <AnimationControls />
+              </>
+            )}
           </div>
         </aside>
 

@@ -233,3 +233,38 @@ Expected response:
 The lecturer can manage the shared quiz library from **Manage Quiz Topics & Questions**. The current version supports adding topics, adding questions, deleting a selected question, and deleting a selected topic. When PostgreSQL is configured, these changes are saved in the server database and are available after refresh and from other browsers. If the database is unavailable, the app falls back to the local browser library.
 
 The previous experimental **Export snapshot** control was removed from the UI because it is not part of the implemented project scope.
+
+## Final UI cleanup
+
+The final lecturer UI does not include the old roadmap panel or the unused export snapshot button. The interface focuses on the implemented features: live classroom sessions, 2D/3D visualization, quiz management, database-backed quiz library, and student practice mode.
+
+### Step 20.3 — Compact Add Topic Form Layout
+
+The lecturer Quiz Builder UI was polished so the Add New Topic form remains compact instead of stretching vertically in full-screen layouts. This improves the visual layout without changing the quiz library logic.
+
+
+### Abstract Vector Spaces
+
+The application now includes an `Abstract Vector Spaces` concept. This mode demonstrates that vectors are not only arrows in 2D or 3D: polynomials, functions and matrices can also be treated as vectors when addition and scalar multiplication are defined. The user can change α and β and see the resulting linear combination in each abstract space.
+
+
+## Step 20.5 — Editable Polynomial Objects
+
+The Abstract Vector Spaces concept now lets users edit the coefficients of the polynomial examples directly. Users can change `p(x) = a + bx + cx²` and `q(x) = d + ex + fx²`, then see `αp(x) + βq(x)` update immediately. The coefficients are also included in live synchronization so lecturer edits are shown to connected students.
+
+## Step 20.6 — Polynomial Graph Visualization
+
+The Abstract Vector Spaces polynomial view was expanded with a graph visualization. In Polynomials mode, the app now displays the curves for `p(x)`, `q(x)`, and `r(x) = αp(x) + βq(x)` over a fixed x-range. The graph updates immediately when the user changes polynomial coefficients or scalar values α and β. This adds a visual layer to the abstract vector space example and helps connect coefficient-based algebraic operations with the graphical behavior of the resulting polynomial.
+
+### Step 20.7 — Polynomial graph colors and RTL explanations
+
+The polynomial graph now uses clearly separated colors for `p(x)`, `q(x)`, and `r(x) = αp(x) + βq(x)`. Hebrew explanation panels in the Abstract Vector Spaces view are displayed right-to-left for improved readability.
+
+
+## Step 20.13 — Editable Matrix Objects
+
+Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2×2 matrices A and B. The result matrix αA + βB updates immediately, and the values are included in the live sync snapshot so lecturer changes can appear on student screens.
+
+
+### Step 20.15 — Matrix input containment fix
+The editable matrix inputs were adjusted so Matrix A and Matrix B remain inside their card and stay responsive on narrow panels.

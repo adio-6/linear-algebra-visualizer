@@ -312,3 +312,106 @@ Run this short test immediately before a demo or submission:
 - [ ] Existing Live Quiz flow still works after deleting non-active topics/questions.
 - [ ] `Export snapshot` no longer appears in the Animation panel.
 - [ ] The app still builds and runs locally.
+
+## 18. Final UI cleanup
+
+- [ ] `Future Full App · Roadmap` panel is not visible in the lecturer page.
+- [ ] `Export snapshot` is not visible in the animation controls.
+- [ ] Lecturer page still shows Live Session, visualization controls, Quiz Builder, and Footer correctly.
+
+## Step 20.3 — Compact Add Topic Form Layout
+
+- [ ] Lecturer can open Manage Quiz Topics & Questions.
+- [ ] Add New Topic form appears compact in full-screen layout.
+- [ ] Topic title input has normal height.
+- [ ] Add Topic button has normal height and remains usable.
+- [ ] Add Question to Topic layout still works.
+- [ ] Delete Topic / Delete Question controls still work.
+- [ ] Responsive layout still works on small screens.
+
+## Step 20.4 — Abstract Vector Spaces Visualization
+
+- [ ] Concept selector shows `Abstract Vector Spaces`.
+- [ ] Selecting the concept hides matrix/vector controls and shows abstract space controls.
+- [ ] Polynomials view shows `αp(x) + βq(x)` and updates when α/β change.
+- [ ] Functions view shows `αsin(x) + βcos(x)` and updates the plotted result curve.
+- [ ] Matrices view shows `αA + βB` and updates the resulting matrix.
+- [ ] Insight panel explains the selected abstract vector space.
+- [ ] Lecturer live session syncs the selected abstract space to students.
+- [ ] Regular concepts still show the original matrix/vector controls and visualizations.
+
+
+## Step 20.5 QA — Editable Polynomial Objects
+
+- [ ] Abstract Vector Spaces appears in the concept selector.
+- [ ] In Polynomials mode, p(x) and q(x) coefficient inputs are visible.
+- [ ] Editing a coefficient changes the displayed polynomial.
+- [ ] Editing a coefficient updates αp(x) + βq(x).
+- [ ] Reset restores the default polynomial examples.
+- [ ] In Live Session, lecturer coefficient edits sync to students.
+- [ ] Practice Alone supports coefficient editing locally.
+
+## Step 20.6 QA — Polynomial Graph Visualization
+
+- [ ] In `Abstract Vector Spaces → Polynomials`, a graph is displayed below the polynomial cards.
+- [ ] The graph shows `p(x)`, `q(x)`, and `r(x) = αp(x) + βq(x)`.
+- [ ] Editing a coefficient of `p(x)` updates the corresponding curve.
+- [ ] Editing a coefficient of `q(x)` updates the corresponding curve.
+- [ ] Changing α or β updates the result curve immediately.
+- [ ] Reset restores the polynomial expressions and graph.
+- [ ] Lecturer live session syncs polynomial graph changes to students.
+- [ ] Practice Alone shows the same graph and updates locally.
+
+## Step 20.7 — Polynomial Graph Colors and RTL Explanations
+
+- [ ] In Abstract Vector Spaces → Polynomials, verify that `p(x)`, `q(x)`, and `r(x)` appear in three distinct colors.
+- [ ] Verify that the graph legend colors match the curve colors.
+- [ ] Verify that Hebrew text in Explanation and Connection to Linear Algebra is aligned right-to-left.
+- [ ] Verify that changing polynomial coefficients still updates the graph.
+- [ ] Verify that lecturer/student sync is unchanged.
+
+## Step 20.8 — Greek Coefficient Labels QA
+
+- [ ] In Abstract Vector Spaces, verify the insight/stat cards display `α` and `β` as Greek symbols.
+- [ ] Verify the coefficient values still update when changing the sliders.
+- [ ] Verify no other stat cards lost their uppercase styling unexpectedly.
+
+- [ ] Verify that in the polynomial editor, p(x) and q(x) appear side by side on wide screens and stack cleanly on narrower screens.
+
+- [ ] Verify polynomial coefficient input values are fully visible when p(x) and q(x) are displayed side by side.
+
+- [ ] Verify polynomial coefficient input boxes do not overflow outside the p(x)/q(x) cards.
+
+- [ ] Verify that Abstract Vector Spaces → Functions includes a Function Pair selector.
+- [ ] Verify that sin/cos, exponential, and Gaussian-like pairs update the formula and graph correctly.
+- [ ] Verify that polynomial pairs do not appear under Functions because they already exist under Polynomials.
+- [ ] Verify that selected function pair syncs from lecturer to student during a Live Session.
+
+- [ ] Verify that Abstract Vector Spaces → Matrices lets the lecturer edit A and B entries and updates αA + βB immediately.
+- [ ] Verify that editable matrix values sync from lecturer to student during a Live Session.
+
+- [ ] Verify that Abstract Vector Spaces → Matrices displays Matrix A and Matrix B in bracket-style 2×2 input layout.
+- [ ] Verify that editing Matrix A/B still updates αA + βB.
+
+- [ ] Verify that Matrix A/B input boxes stay inside the matrix editor card on narrow and wide screens.
+- [ ] Verify polynomial coefficient number arrows change values by 1.
+- [ ] Verify abstract matrix entry number arrows change values by 1.
+- [ ] Verify that main Matrix A inputs increment/decrement by 1 using number arrows.
+- [ ] Verify that v/u vector inputs increment/decrement by 1 using number arrows.
+- [ ] Verify that α/β sliders still behave smoothly.
+
+- [ ] Verify that 2D visualization stays visible when matrix entries are increased to values such as 6, 7, and 8.
+- [ ] Verify that small/default matrices still remain readable after adaptive zoom.
+
+- [ ] Verify 2D zoom controls zoom in, zoom out, and reset without breaking adaptive canvas scaling.
+
+- [ ] Verify that the 2D area card displays `AREA = value`.
+- [ ] Verify that mouse wheel zoom works inside the 2D canvas.
+- [ ] Verify that the existing 2D zoom buttons still work.
+
+- [ ] Verify mouse wheel over the 2D canvas zooms only the graph and does not scroll the page.
+- [ ] Verify mouse wheel outside the 2D canvas scrolls the page normally.
+
+- [ ] Verify that `AREA = value` appears in the top-left 2D graph overlay for Linear Transformation and Determinant.
+- [ ] Verify that `AREA = value` is not displayed as a separate card below the canvas.
+- [ ] Verify that 2D zoom buttons and mouse-wheel zoom still work.

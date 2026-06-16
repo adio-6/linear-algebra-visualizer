@@ -5,6 +5,55 @@ function getCSS(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
 
+
+function finitePoint(point) {
+  return Array.isArray(point) && point.length >= 2 && Number.isFinite(point[0]) && Number.isFinite(point[1]);
+}
+
+function maxAbsCoord(points) {
+  return points.reduce((max, point) => {
+    if (!finitePoint(point)) return max;
+    return Math.max(max, Math.abs(point[0]), Math.abs(point[1]));
+  }, 0);
+}
+
+function computeAdaptiveWorldExtent(state, matrix) {
+  const points = [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+    [0, -1],
+    state.v,
+    state.u,
+  ];
+
+  const basisPoints = [
+    [1, 0],
+    [0, 1],
+    [1, 1],
+    [-1, 0],
+    [0, -1],
+    [-1, -1],
+  ];
+
+  basisPoints.forEach((point) => points.push(matVec(matrix, point)));
+
+  if (finitePoint(state.v)) points.push(matVec(matrix, state.v));
+  if (finitePoint(state.u)) points.push(matVec(matrix, state.u));
+
+  if (finitePoint(state.v) && finitePoint(state.u)) {
+    points.push([state.v[0] + state.u[0], state.v[1] + state.u[1]]);
+    points.push(linComb(state.alpha || 0, state.u, state.beta || 0, state.v));
+    points.push([state.alpha * state.u[0], state.alpha * state.u[1]]);
+    points.push([state.beta * state.v[0], state.beta * state.v[1]]);
+  }
+
+  const rawExtent = maxAbsCoord(points);
+  const paddedExtent = rawExtent * 1.22 + 1;
+  return Math.max(5, Math.min(36, paddedExtent));
+}
+
 export default function Canvas2D({ state }) {
   const canvasRef = useRef(null);
 
@@ -27,7 +76,12 @@ export default function Canvas2D({ state }) {
 
       const cx = width / 2;
       const cy = height / 2;
-      const unit = Math.min(width, height) / 11;
+
+      const t = typeof state.t === 'number' ? state.t : 1;
+      const Mt = lerpMatrix(state.A, t);
+      const worldExtent = computeAdaptiveWorldExtent(state, Mt);
+      const manualZoom = Number.isFinite(state.canvas2DZoom) ? state.canvas2DZoom : 1;
+      const unit = (Math.min(width, height) / (worldExtent * 2)) * manualZoom;
 
       const tx = (x) => cx + x * unit;
       const ty = (y) => cy - y * unit;
@@ -230,8 +284,6 @@ export default function Canvas2D({ state }) {
 
       ctx.clearRect(0, 0, width, height);
 
-      const t = typeof state.t === 'number' ? state.t : 1;
-      const Mt = lerpMatrix(state.A, t);
       const det = determinant(Mt);
 
       ctx.save();
@@ -254,12 +306,6 @@ export default function Canvas2D({ state }) {
         }
         drawParallelogram(Mt, fill, stroke);
 
-        const center = matVec(Mt, [0.5, 0.5]);
-        ctx.font = '600 13px JetBrains Mono, monospace';
-        ctx.fillStyle = stroke;
-        ctx.textAlign = 'center';
-        ctx.fillText(`area = ${Math.abs(det).toFixed(2)}`, tx(center[0]), ty(center[1]));
-        ctx.textAlign = 'start';
       }
 
       if (state.concept === 'span') {
@@ -302,11 +348,6 @@ export default function Canvas2D({ state }) {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        ctx.font = '600 13px JetBrains Mono, monospace';
-        ctx.fillStyle = stroke;
-        ctx.textAlign = 'center';
-        ctx.fillText(valid ? `new basis · area ${Math.abs(vuDet).toFixed(2)}` : 'not a basis', tx((state.v[0] + state.u[0]) / 2), ty((state.v[1] + state.u[1]) / 2));
-        ctx.textAlign = 'start';
       }
 
       const iHat = matVec(Mt, [1, 0]);

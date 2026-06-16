@@ -26,7 +26,7 @@ export default function MatrixInput() {
               key={`${rowIndex}-${colIndex}`}
               className="matrix-cell"
               type="number"
-              step="0.1"
+              step="1"
               value={value}
               onChange={(e) => setMatrix(updateCell(A, rowIndex, colIndex, e.target.value))}
             />

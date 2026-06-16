@@ -18,6 +18,7 @@ const labels = {
   eigen: 'Eigenvectors',
   span: 'Span / Basis',
   basis: 'Change of Basis',
+  abstract: 'Abstract Spaces',
 };
 
 function MatrixDisplay({ matrix }) {
@@ -61,6 +62,67 @@ function explanationFor(state, det, transformType) {
   return `המטריצה הנוכחית מתנהגת כמו: ${transformType}. בהמשך נחבר את המידע הזה גם להדמיה הגרפית.`;
 }
 
+
+function abstractExplanation(space) {
+  if (space === 'functions') {
+    return 'במרחב פונקציות, כל פונקציה יכולה להיחשב וקטור. ניתן לחבר פונקציות ולהכפיל אותן בסקלר, והתוצאה היא פונקציה חדשה באותו מרחב.';
+  }
+  if (space === 'matrices') {
+    return 'במרחב מטריצות, כל מטריצה יכולה להיחשב וקטור. החיבור והכפל בסקלר מתבצעים איבר־איבר, והתוצאה היא מטריצה חדשה באותו מרחב.';
+  }
+  return 'במרחב פולינומים, כל פולינום יכול להיחשב וקטור של מקדמים. צירוף ליניארי של פולינומים מחושב על ידי שילוב המקדמים שלהם.';
+}
+
+function AbstractInsight({ space, alpha, beta }) {
+  const spaceLabel = space === 'functions' ? 'Functions' : space === 'matrices' ? 'Matrices' : 'Polynomials';
+
+  return (
+    <aside className="right-panel">
+      <div className="card">
+        <div className="card-section">
+          <div className="section-title">
+            Live Insight <span className="pill">Abstract Spaces</span>
+          </div>
+          <div className="abstract-insight-callout">
+            <strong>{spaceLabel} can be vectors.</strong>
+            <span> A vector is defined by the operations it supports, not only by how it looks geometrically.</span>
+          </div>
+          <div className="stat-grid" style={{ marginTop: 14 }}>
+            <div className="stat">
+              <div className="k">Selected space</div>
+              <div className="v" style={{ fontSize: 13 }}>{spaceLabel}</div>
+            </div>
+            <div className="stat">
+              <div className="k">Operation</div>
+              <div className="v" style={{ fontSize: 13 }}>α object₁ + β object₂</div>
+            </div>
+            <div className="stat">
+              <div className="k greek-label">α</div>
+              <div className="v">{fmt(alpha)}</div>
+            </div>
+            <div className="stat">
+              <div className="k greek-label">β</div>
+              <div className="v">{fmt(beta)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-section">
+          <div className="section-title">Explanation</div>
+          <div className="explanation rtl-explanation">{abstractExplanation(space)}</div>
+        </div>
+
+        <div className="card-section">
+          <div className="section-title">Connection to Linear Algebra</div>
+          <div className="explanation rtl-explanation">
+            הרכיב מדגים שהמושגים צירוף ליניארי, Span ובסיס אינם שייכים רק לחצים ב־R² או R³, אלא לכל אוסף אובייקטים שמקיים חיבור וכפל בסקלר.
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 export default function InsightPanel() {
   const dim = useVisualizerStore((s) => s.dim);
   const concept = useVisualizerStore((s) => s.concept);
@@ -69,6 +131,11 @@ export default function InsightPanel() {
   const u = useVisualizerStore((s) => s.u);
   const alpha = useVisualizerStore((s) => s.alpha);
   const beta = useVisualizerStore((s) => s.beta);
+  const abstractSpace = useVisualizerStore((s) => s.abstractSpace);
+
+  if (concept === 'abstract') {
+    return <AbstractInsight space={abstractSpace} alpha={alpha} beta={beta} />;
+  }
 
   const state = { dim, concept, A, v, u, alpha, beta };
   const det = currentDet(state.A);

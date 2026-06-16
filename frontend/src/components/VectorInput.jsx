@@ -14,7 +14,7 @@ function VectorRow({ label, labelClass, values, dim, onChange }) {
             key={`${label}-${index}`}
             className="vec-input"
             type="number"
-            step="0.1"
+            step="1"
             value={value}
             onChange={(e) => onChange(index, e.target.value)}
           />
@@ -65,7 +65,7 @@ export default function VectorInput() {
           type="range"
           min="-3"
           max="3"
-          step="0.1"
+          step="1"
           value={alpha}
           onChange={(e) => setAlpha(Number(e.target.value))}
         />
@@ -80,7 +80,7 @@ export default function VectorInput() {
           type="range"
           min="-3"
           max="3"
-          step="0.1"
+          step="1"
           value={beta}
           onChange={(e) => setBeta(Number(e.target.value))}
         />
