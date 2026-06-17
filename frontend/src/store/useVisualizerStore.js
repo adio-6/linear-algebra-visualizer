@@ -30,6 +30,47 @@ const presets3D = {
   collapse: [[1, 0, 1], [0, 1, 1], [1, 1, 2]],
 };
 
+const rotateAngles = [45, 90, 135, 180, 225, 270, 315, 0];
+
+function roundPresetValue(value) {
+  const rounded = Math.round(value * 100) / 100;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function rotationMatrix2D(degrees) {
+  const rad = (degrees * Math.PI) / 180;
+  const c = roundPresetValue(Math.cos(rad));
+  const s = roundPresetValue(Math.sin(rad));
+  return [[c, -s], [s, c]];
+}
+
+function rotationMatrix3D(degrees) {
+  const R = rotationMatrix2D(degrees);
+  return [
+    [R[0][0], R[0][1], 0],
+    [R[1][0], R[1][1], 0],
+    [0, 0, 1],
+  ];
+}
+
+function matricesClose(A, B, tolerance = 0.02) {
+  if (!Array.isArray(A) || !Array.isArray(B) || A.length !== B.length) return false;
+
+  return A.every((row, rowIndex) => (
+    Array.isArray(row)
+    && Array.isArray(B[rowIndex])
+    && row.length === B[rowIndex].length
+    && row.every((cell, colIndex) => Math.abs((Number(cell) || 0) - B[rowIndex][colIndex]) <= tolerance)
+  ));
+}
+
+function nextRotationPreset(currentMatrix, dim) {
+  const builders = dim === 3 ? rotationMatrix3D : rotationMatrix2D;
+  const currentIndex = rotateAngles.findIndex((degrees) => matricesClose(currentMatrix, builders(degrees)));
+  const nextAngle = currentIndex === -1 ? rotateAngles[0] : rotateAngles[(currentIndex + 1) % rotateAngles.length];
+  return builders(nextAngle);
+}
+
 function cloneValue(value) {
   if (Array.isArray(value)) return value.map(cloneValue);
   if (value && typeof value === 'object') {
@@ -186,7 +227,13 @@ export const useVisualizerStore = create((set, get) => ({
   }),
 
   applyPreset: (name) => {
-    const { dim } = get();
+    const { dim, A } = get();
+
+    if (name === 'rotate') {
+      set({ A: cloneMatrix(nextRotationPreset(A, dim)), t: 1 });
+      return;
+    }
+
     const preset = dim === 3 ? presets3D[name] : presets2D[name];
     if (!preset) return;
     set({ A: cloneMatrix(preset), t: 1 });

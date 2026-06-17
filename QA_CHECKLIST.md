@@ -475,9 +475,4 @@ Run this short test immediately before a demo or submission:
 - [ ] In Eigenvectors 3D, verify that v appears as a semi-transparent vector, A·v appears as a solid vector, and a guide line is shown through v.
 - [ ] In Eigenvectors Live Insight, verify that collinearity/eigenvector status and λ update when v or Matrix A changes.
 
-- [ ] In Lecturer workspace → Manage Quiz Topics & Questions, add a question containing inline LaTeX such as `$A\vec{v}=\lambda\vec{v}$`.
-- [ ] Verify the question preview renders the math while typing.
-- [ ] Add answer options containing LaTeX and verify the options preview renders them.
-- [ ] Open the live quiz and verify the lecturer view renders LaTeX in the question and options.
-- [ ] Join as a student and verify the live quiz renders the same LaTeX correctly.
-- [ ] Open Practice Mode and verify saved LaTeX questions/options render correctly.
+- [ ] Clicking **Rotate** repeatedly cycles through 45°, 90°, 135°, 180°, 225°, 270°, 315°, and back to the original identity matrix in both 2D and 3D.

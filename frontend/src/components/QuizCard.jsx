@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { socket } from '../api/socketClient.js';
-import LatexText from './LatexText.jsx';
 import {
   addQuestionToTopic as addLocalQuestionToTopic,
   createTopic as createLocalTopic,
@@ -760,14 +759,14 @@ export default function QuizCard({ joinCode }) {
         {shownQuiz ? (
           <>
             {shownQuiz.topicTitle && <div className="quiz-topic-label">Topic: {shownQuiz.topicTitle}</div>}
-            <div className="quiz-q"><LatexText text={shownQuiz.question} /></div>
+            <div className="quiz-q">{shownQuiz.question}</div>
             <div className="quiz-opts">
               {shownQuiz.options.map((option, index) => {
                 const isCorrectAfterReveal = liveQuiz && answerRevealed && index === shownQuiz.correctIndex;
                 return (
                   <div key={`${shownQuiz.questionId}-${option}`} className={`quiz-opt ${isCorrectAfterReveal ? 'correct-soft' : ''}`}>
                     <span className="letter">{String.fromCharCode(65 + index)}</span>
-                    <span><LatexText text={option} /></span>
+                    <span>{option}</span>
                   </div>
                 );
               })}
@@ -868,17 +867,10 @@ export default function QuizCard({ joinCode }) {
                 <textarea
                   value={questionForm.question}
                   onChange={(event) => setQuestionForm((current) => ({ ...current, question: event.target.value }))}
-                  placeholder="Example: Is $v=(1,0)$ an eigenvector of $A$?"
+                  placeholder="Write the question"
                   rows="3"
                 />
-                <small className="latex-help-text">LaTeX supported: inline <code>$...$</code> or display <code>$$...$$</code>.</small>
               </label>
-              {questionForm.question.trim() && (
-                <div className="latex-preview-box">
-                  <div className="latex-preview-title">Question preview</div>
-                  <LatexText text={questionForm.question} />
-                </div>
-              )}
               <div className="option-editor-grid">
                 {questionForm.options.map((option, index) => (
                   <label className="field-group" key={`option-${index}`}>
@@ -887,23 +879,11 @@ export default function QuizCard({ joinCode }) {
                       type="text"
                       value={option}
                       onChange={(event) => handleQuestionOptionChange(index, event.target.value)}
-                      placeholder={`Answer ${String.fromCharCode(65 + index)} · supports $...$`}
+                      placeholder={`Answer ${String.fromCharCode(65 + index)}`}
                     />
                   </label>
                 ))}
               </div>
-              {questionForm.options.some((option) => option.trim()) && (
-                <div className="latex-preview-box">
-                  <div className="latex-preview-title">Options preview</div>
-                  <div className="latex-preview-options">
-                    {questionForm.options.map((option, index) => (
-                      <div key={`preview-option-${index}`}>
-                        <strong>{String.fromCharCode(65 + index)}.</strong> <LatexText text={option || '—'} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               <div className="quiz-selector-grid">
                 <label className="field-group">
                   <span>Correct answer</span>
@@ -1005,11 +985,11 @@ export default function QuizCard({ joinCode }) {
           {shownQuiz ? shownQuiz.options.map((option, index) => {
             const count = results.distribution[index] || 0;
             const width = `${Math.round((count / maxCount) * 100)}%`;
-            const letter = String.fromCharCode(65 + index);
+            const label = `${String.fromCharCode(65 + index)} - ${option}`;
             const isCorrectAfterReveal = answerRevealed && index === shownQuiz.correctIndex;
             return (
               <div className={`bar-row ${isCorrectAfterReveal ? 'correct-result-row' : ''}`} key={`result-${shownQuiz.questionId}-${index}`}>
-                <div className="top"><span>{letter} - <LatexText text={option} /></span><b>{count}</b></div>
+                <div className="top"><span>{label}</span><b>{count}</b></div>
                 <div className="bar"><span style={{ width }}></span></div>
               </div>
             );

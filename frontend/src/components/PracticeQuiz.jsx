@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchQuizTopics } from '../api/quizLibraryApi.js';
 import { loadQuizTopics } from '../utils/quizStorage.js';
-import LatexText from './LatexText.jsx';
 
 function inferConceptFromTopic(topic) {
   const text = `${topic?.id || ''} ${topic?.title || ''}`.toLowerCase();
@@ -215,7 +214,7 @@ export default function PracticeQuiz() {
             ) : (
               <div className="practice-question-panel">
                 {selectedQuestion.topicTitle && <div className="quiz-topic-label">Topic: {selectedQuestion.topicTitle}</div>}
-                <div className="quiz-q"><LatexText text={selectedQuestion.question} /></div>
+                <div className="quiz-q">{selectedQuestion.question}</div>
                 <div className="quiz-opts">
                   {selectedQuestion.options.map((option, index) => {
                     const isSelected = selectedChoice === index;
@@ -238,7 +237,7 @@ export default function PracticeQuiz() {
                         disabled={checked}
                       >
                         <span className="letter">{answerLetter(index)}</span>
-                        <span><LatexText text={option} /></span>
+                        <span>{option}</span>
                       </button>
                     );
                   })}
@@ -253,11 +252,7 @@ export default function PracticeQuiz() {
                   {!checked && selectedChoice === null && 'Choose one answer.'}
                   {!checked && selectedChoice !== null && `Current choice: ${answerLetter(selectedChoice)}. Click Check Answer when ready.`}
                   {checked && isCorrect && '✓ Correct answer.'}
-                  {checked && !isCorrect && (
-                    <span>
-                      ✗ Incorrect. Correct answer: {answerLetter(selectedQuestion.correctIndex)} - <LatexText text={selectedQuestion.options[selectedQuestion.correctIndex]} />
-                    </span>
-                  )}
+                  {checked && !isCorrect && `✗ Incorrect. Correct answer: ${answerLetter(selectedQuestion.correctIndex)} - ${selectedQuestion.options[selectedQuestion.correctIndex]}`}
                 </div>
               </div>
             )}
