@@ -286,3 +286,5 @@ Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2�
 - Step 20.36: Updated the 3D Eigenvectors view to show the input vector v, the transformed vector A·v, a guide line through v, and Live Insight checks for collinearity/eigenvector status and λ.
 
 - Step 20.38: Updated the **Rotate** matrix preset so repeated clicks cycle through additional rotation angles and eventually return to the identity/original rotation state.
+
+- Step 20.39: Restored LaTeX quiz rendering after the Rotate preset-cycle update. Re-added `LatexText.jsx`, KaTeX dependency, LaTeX rendering in lecturer/student/practice quiz views, and preserved the Rotate cycle behavior.

@@ -18,7 +18,8 @@
     "three": "latest",
     "@react-three/fiber": "latest",
     "@react-three/drei": "latest",
-    "socket.io-client": "latest"
+    "socket.io-client": "latest",
+    "katex": "^0.16.47"
   },
   "devDependencies": {}
 }

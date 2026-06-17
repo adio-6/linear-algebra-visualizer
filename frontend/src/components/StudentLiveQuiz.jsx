@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { socket } from '../api/socketClient.js';
+import LatexText from './LatexText.jsx';
 
 export default function StudentLiveQuiz({ joinCode, quiz, results, answerReveal, onAnswered }) {
   const [selectedChoice, setSelectedChoice] = useState(null);
@@ -78,7 +79,7 @@ export default function StudentLiveQuiz({ joinCode, quiz, results, answerReveal,
       <div className="card-section">
         <div className="section-title">Live Quiz <span className="badge-sim">From lecturer</span></div>
         {quiz.topicTitle && <div className="quiz-topic-label">Topic: {quiz.topicTitle}</div>}
-        <div className="quiz-q">{quiz.question}</div>
+        <div className="quiz-q"><LatexText text={quiz.question} /></div>
         <div className="quiz-opts">
           {quiz.options.map((option, index) => {
             const isSelected = selectedChoice === index;
@@ -97,7 +98,7 @@ export default function StudentLiveQuiz({ joinCode, quiz, results, answerReveal,
                 disabled={answerRevealed || isSubmitting}
               >
                 <span className="letter">{String.fromCharCode(65 + index)}</span>
-                <span>{option}</span>
+                <span><LatexText text={option} /></span>
               </button>
             );
           })}
@@ -135,7 +136,7 @@ export default function StudentLiveQuiz({ joinCode, quiz, results, answerReveal,
               const isCorrectAfterReveal = answerRevealed && index === revealedCorrectIndex;
               return (
                 <div className={`bar-row ${isCorrectAfterReveal ? 'correct-result-row' : ''}`} key={`student-result-${quiz.questionId}-${index}`}>
-                  <div className="top"><span>{String.fromCharCode(65 + index)} - {option}</span><b>{count}</b></div>
+                  <div className="top"><span>{String.fromCharCode(65 + index)} - <LatexText text={option} /></span><b>{count}</b></div>
                   <div className="bar"><span style={{ width }}></span></div>
                 </div>
               );

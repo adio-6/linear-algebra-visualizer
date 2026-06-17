@@ -476,3 +476,7 @@ Run this short test immediately before a demo or submission:
 - [ ] In Eigenvectors Live Insight, verify that collinearity/eigenvector status and λ update when v or Matrix A changes.
 
 - [ ] Clicking **Rotate** repeatedly cycles through 45°, 90°, 135°, 180°, 225°, 270°, 315°, and back to the original identity matrix in both 2D and 3D.
+
+- [ ] In the lecturer quiz editor, entering `$A\vec{v}=\lambda\vec{v}$` shows a rendered preview.
+- [ ] The same LaTeX question renders correctly in Live Quiz, Student screen, Practice Mode, and results.
+- [ ] The Rotate button still cycles through several rotation angles before returning to Identity.
