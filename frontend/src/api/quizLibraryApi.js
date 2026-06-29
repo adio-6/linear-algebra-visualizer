@@ -63,6 +63,17 @@ export async function deleteQuizTopic(topicId) {
 }
 
 
+
+export async function updateQuizQuestion(topicId, questionId, questionData) {
+  const response = await fetch(`${API_BASE_URL}/api/quiz-topics/${encodeURIComponent(topicId)}/questions/${encodeURIComponent(questionId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(questionData),
+  });
+
+  return readJsonResponse(response);
+}
+
 export async function deleteQuizQuestion(topicId, questionId) {
   const response = await fetch(`${API_BASE_URL}/api/quiz-topics/${encodeURIComponent(topicId)}/questions/${encodeURIComponent(questionId)}`, {
     method: 'DELETE',

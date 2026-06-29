@@ -6,6 +6,8 @@ import {
   createTopic as createLocalTopic,
   loadQuizTopics,
   saveQuizTopics,
+  updateTopic as updateLocalTopic,
+  updateQuestionInTopic as updateLocalQuestionInTopic,
   deleteTopic as deleteLocalTopic,
   deleteQuestionFromTopic as deleteLocalQuestionFromTopic,
 } from '../utils/quizStorage.js';
@@ -16,6 +18,8 @@ import {
   deleteQuizQuestion as deleteServerQuestion,
   deleteQuizTopic as deleteServerTopic,
   fetchQuizTopics,
+  updateQuizQuestion as updateServerQuestion,
+  updateQuizTopic as updateServerTopic,
 } from '../api/quizLibraryApi.js';
 
 function inferConceptFromTopic(topic) {
@@ -194,6 +198,11 @@ export default function QuizCard({ joinCode }) {
   const [deleteTopicId, setDeleteTopicId] = useState(selectedTopicId);
   const [deleteQuestionTopicId, setDeleteQuestionTopicId] = useState(selectedTopicId);
   const [deleteQuestionId, setDeleteQuestionId] = useState('');
+  const [editTopicId, setEditTopicId] = useState(selectedTopicId);
+  const [editTopicForm, setEditTopicForm] = useState({ title: '' });
+  const [editQuestionTopicId, setEditQuestionTopicId] = useState(selectedTopicId);
+  const [editQuestionId, setEditQuestionId] = useState('');
+  const [editQuestionForm, setEditQuestionForm] = useState(makeEmptyQuestionForm);
 
   useEffect(() => {
     let isMounted = true;
@@ -212,6 +221,8 @@ export default function QuizCard({ joinCode }) {
         setTopics(serverTopics);
         setSelectedTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
         setQuestionTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
+        setEditTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
+        setEditQuestionTopicId((current) => current && serverTopics.some((topic) => topic.id === current) ? current : serverTopics[0]?.id || '');
         setSelectedQuestionId((current) => {
           if (serverTopics.some((topic) => topic.questions.some((question) => question.questionId === current))) return current;
           return serverTopics[0]?.questions?.[0]?.questionId || '';
@@ -224,6 +235,8 @@ export default function QuizCard({ joinCode }) {
         setTopics(localTopics);
         setSelectedTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
         setQuestionTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
+        setEditTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
+        setEditQuestionTopicId((current) => current && localTopics.some((topic) => topic.id === current) ? current : localTopics[0]?.id || '');
         setSelectedQuestionId((current) => {
           if (localTopics.some((topic) => topic.questions.some((question) => question.questionId === current))) return current;
           return localTopics[0]?.questions?.[0]?.questionId || '';
@@ -283,6 +296,47 @@ export default function QuizCard({ joinCode }) {
       setDeleteQuestionId(questionTopic?.questions?.[0]?.questionId || '');
     }
   }, [topics, selectedTopicId, deleteTopicId, deleteQuestionTopicId, deleteQuestionId]);
+
+
+  useEffect(() => {
+    const topicIds = new Set(topics.map((topic) => topic.id));
+    const fallbackTopicId = selectedTopicId || topics[0]?.id || '';
+
+    if (!editTopicId || !topicIds.has(editTopicId)) {
+      setEditTopicId(fallbackTopicId);
+    }
+
+    const editTopic = topics.find((topic) => topic.id === (editTopicId || fallbackTopicId));
+    setEditTopicForm({ title: editTopic?.title || '' });
+
+    if (!editQuestionTopicId || !topicIds.has(editQuestionTopicId)) {
+      setEditQuestionTopicId(fallbackTopicId);
+      const fallbackTopic = topics.find((topic) => topic.id === fallbackTopicId);
+      setEditQuestionId(fallbackTopic?.questions?.[0]?.questionId || '');
+      return;
+    }
+
+    const questionTopic = topics.find((topic) => topic.id === editQuestionTopicId);
+    const questionIds = new Set((questionTopic?.questions || []).map((question) => question.questionId));
+    if (!editQuestionId || !questionIds.has(editQuestionId)) {
+      setEditQuestionId(questionTopic?.questions?.[0]?.questionId || '');
+    }
+  }, [topics, selectedTopicId, editTopicId, editQuestionTopicId, editQuestionId]);
+
+  useEffect(() => {
+    const topic = topics.find((item) => item.id === editQuestionTopicId) || null;
+    const question = topic?.questions?.find((item) => item.questionId === editQuestionId) || null;
+    if (!question) {
+      setEditQuestionForm(makeEmptyQuestionForm());
+      return;
+    }
+
+    setEditQuestionForm({
+      question: question.question || '',
+      options: Array.isArray(question.options) ? [...question.options, '', '', '', ''].slice(0, 4) : ['', '', '', ''],
+      correctIndex: Number.isInteger(Number(question.correctIndex)) ? Number(question.correctIndex) : 0,
+    });
+  }, [topics, editQuestionTopicId, editQuestionId]);
 
   useEffect(() => {
     setLiveQuiz(null);
@@ -405,6 +459,112 @@ export default function QuizCard({ joinCode }) {
       ...current,
       options: current.options.map((option, optionIndex) => optionIndex === index ? value : option),
     }));
+  }
+
+
+  function handleEditQuestionOptionChange(index, value) {
+    setEditQuestionForm((current) => ({
+      ...current,
+      options: current.options.map((option, optionIndex) => optionIndex === index ? value : option),
+    }));
+  }
+
+  async function handleEditTopic(event) {
+    event.preventDefault();
+    setLibraryError('');
+    setLibraryMessage('');
+
+    const topic = topics.find((item) => item.id === editTopicId) || null;
+    const title = editTopicForm.title.trim();
+
+    if (!topic) {
+      setLibraryError('Choose a topic to edit.');
+      return;
+    }
+
+    if (!title) {
+      setLibraryError('Topic title is required.');
+      return;
+    }
+
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        await updateServerTopic(topic.id, { title });
+        await refreshServerTopics(topic.id, selectedQuestionId);
+        setLibraryMessage('Topic updated.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not update topic in server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    const nextTopics = updateLocalTopic(topic.id, { title });
+    setTopics(nextTopics);
+    setLibraryMessage('Topic updated in local fallback library.');
+  }
+
+  async function handleEditQuestion(event) {
+    event.preventDefault();
+    setLibraryError('');
+    setLibraryMessage('');
+
+    const topic = topics.find((item) => item.id === editQuestionTopicId) || null;
+    const question = topic?.questions?.find((item) => item.questionId === editQuestionId) || null;
+    const questionText = editQuestionForm.question.trim();
+    const options = editQuestionForm.options.map((option) => option.trim());
+    const correctIndex = Number(editQuestionForm.correctIndex);
+
+    if (!topic) {
+      setLibraryError('Choose a topic before editing a question.');
+      return;
+    }
+
+    if (!question) {
+      setLibraryError('Choose a question to edit.');
+      return;
+    }
+
+    if (!questionText) {
+      setLibraryError('Question text is required.');
+      return;
+    }
+
+    if (options.some((option) => !option)) {
+      setLibraryError('Please fill all four options.');
+      return;
+    }
+
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length) {
+      setLibraryError('Correct answer must refer to Option A, B, C, or D.');
+      return;
+    }
+
+    const patch = { question: questionText, options, correctIndex };
+
+    if (librarySource === 'server') {
+      try {
+        setIsBusy(true);
+        await updateServerQuestion(topic.id, question.questionId, patch);
+        await refreshServerTopics(topic.id, question.questionId);
+        setEditQuestionTopicId(topic.id);
+        setEditQuestionId(question.questionId);
+        setLibraryMessage('Question updated.');
+      } catch (error) {
+        setLibraryError(error.message || 'Could not update question in server database.');
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    const nextTopics = updateLocalQuestionInTopic(topic.id, question.questionId, patch);
+    setTopics(nextTopics);
+    setSelectedTopicId(topic.id);
+    setSelectedQuestionId(question.questionId);
+    setLibraryMessage('Question updated in local fallback library.');
   }
 
   async function handleAddQuestion(event) {
@@ -922,6 +1082,135 @@ export default function QuizCard({ joinCode }) {
                 Related concept is selected automatically from the topic.
               </div>
               <button className="btn primary" type="submit" disabled={!questionTopicId || isBusy || libraryLoading}>Add Question</button>
+            </form>
+          </div>
+
+          <div className="quiz-management-grid quiz-edit-management">
+            <form className="quiz-builder-form" onSubmit={handleEditTopic}>
+              <div className="section-title small-title">Edit Existing Topic</div>
+              <label className="field-group">
+                <span>Topic to edit</span>
+                <select
+                  value={editTopicId}
+                  onChange={(event) => {
+                    const topicId = event.target.value;
+                    const topic = topics.find((item) => item.id === topicId);
+                    setEditTopicId(topicId);
+                    setEditTopicForm({ title: topic?.title || '' });
+                  }}
+                  disabled={topics.length === 0 || isBusy || libraryLoading}
+                >
+                  {topics.length === 0 && <option value="">No topics available</option>}
+                  {topics.map((topic) => (
+                    <option value={topic.id} key={`edit-topic-${topic.id}`}>{topic.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-group">
+                <span>New topic title</span>
+                <input
+                  type="text"
+                  value={editTopicForm.title}
+                  onChange={(event) => setEditTopicForm({ title: event.target.value })}
+                  placeholder="Updated topic title"
+                  disabled={!editTopicId || isBusy || libraryLoading}
+                />
+              </label>
+              <button className="btn primary" type="submit" disabled={!editTopicId || isBusy || libraryLoading}>Save Topic Changes</button>
+            </form>
+
+            <form className="quiz-builder-form" onSubmit={handleEditQuestion}>
+              <div className="section-title small-title">Edit Existing Question</div>
+              <label className="field-group">
+                <span>Topic</span>
+                <select
+                  value={editQuestionTopicId}
+                  onChange={(event) => {
+                    const topicId = event.target.value;
+                    const topic = topics.find((item) => item.id === topicId);
+                    setEditQuestionTopicId(topicId);
+                    setEditQuestionId(topic?.questions?.[0]?.questionId || '');
+                  }}
+                  disabled={topics.length === 0 || isBusy || libraryLoading}
+                >
+                  {topics.length === 0 && <option value="">No topics available</option>}
+                  {topics.map((topic) => (
+                    <option value={topic.id} key={`edit-question-topic-${topic.id}`}>{topic.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-group">
+                <span>Question to edit</span>
+                <select
+                  value={editQuestionId}
+                  onChange={(event) => setEditQuestionId(event.target.value)}
+                  disabled={!editQuestionTopicId || isBusy || libraryLoading}
+                >
+                  {(topics.find((topic) => topic.id === editQuestionTopicId)?.questions || []).length === 0 && <option value="">No questions available</option>}
+                  {(topics.find((topic) => topic.id === editQuestionTopicId)?.questions || []).map((question, index) => (
+                    <option value={question.questionId} key={`edit-question-${question.questionId}`}>{index + 1}. {question.question}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-group">
+                <span>Question text</span>
+                <textarea
+                  value={editQuestionForm.question}
+                  onChange={(event) => setEditQuestionForm((current) => ({ ...current, question: event.target.value }))}
+                  placeholder="Edit question text · supports $...$"
+                  rows="3"
+                  disabled={!editQuestionId || isBusy || libraryLoading}
+                />
+                <small className="latex-help-text">LaTeX supported: inline <code>$...$</code> or display <code>$$...$$</code>.</small>
+              </label>
+              {editQuestionForm.question.trim() && (
+                <div className="latex-preview-box">
+                  <div className="latex-preview-title">Edited question preview</div>
+                  <LatexText text={editQuestionForm.question} />
+                </div>
+              )}
+              <div className="option-editor-grid">
+                {editQuestionForm.options.map((option, index) => (
+                  <label className="field-group" key={`edit-option-${index}`}>
+                    <span>Option {String.fromCharCode(65 + index)}</span>
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(event) => handleEditQuestionOptionChange(index, event.target.value)}
+                      placeholder={`Answer ${String.fromCharCode(65 + index)} · supports $...$`}
+                      disabled={!editQuestionId || isBusy || libraryLoading}
+                    />
+                  </label>
+                ))}
+              </div>
+              {editQuestionForm.options.some((option) => option.trim()) && (
+                <div className="latex-preview-box">
+                  <div className="latex-preview-title">Edited options preview</div>
+                  <div className="latex-preview-options">
+                    {editQuestionForm.options.map((option, index) => (
+                      <div key={`edit-preview-option-${index}`}>
+                        <strong>{String.fromCharCode(65 + index)}.</strong> <LatexText text={option || '—'} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="quiz-selector-grid">
+                <label className="field-group">
+                  <span>Correct answer</span>
+                  <select
+                    value={editQuestionForm.correctIndex}
+                    onChange={(event) => setEditQuestionForm((current) => ({ ...current, correctIndex: Number(event.target.value) }))}
+                    disabled={!editQuestionId || isBusy || libraryLoading}
+                  >
+                    <option value={0}>Option A</option>
+                    <option value={1}>Option B</option>
+                    <option value={2}>Option C</option>
+                    <option value={3}>Option D</option>
+                  </select>
+                </label>
+              </div>
+              <button className="btn primary" type="submit" disabled={!editQuestionId || isBusy || libraryLoading}>Save Question Changes</button>
             </form>
           </div>
 

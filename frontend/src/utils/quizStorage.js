@@ -151,6 +151,34 @@ export function addQuestionToTopic(topicId, question) {
   return saveQuizTopics(nextTopics);
 }
 
+
+export function updateQuestionInTopic(topicId, questionId, patch) {
+  const topics = loadQuizTopics();
+  const nextTopics = topics.map((topic) => {
+    if (topic.id !== topicId) return topic;
+
+    return {
+      ...topic,
+      questions: topic.questions.map((question) => {
+        const currentQuestionId = question.questionId || question.id;
+        if (currentQuestionId !== questionId) return question;
+
+        return {
+          ...question,
+          ...patch,
+          questionId: currentQuestionId,
+          topicId: topic.id,
+          topicTitle: topic.title,
+          options: Array.isArray(patch.options) ? patch.options : question.options,
+          correctIndex: Number.isInteger(Number(patch.correctIndex)) ? Number(patch.correctIndex) : question.correctIndex,
+        };
+      }),
+    };
+  });
+
+  return saveQuizTopics(nextTopics);
+}
+
 export function deleteTopic(topicId) {
   const topics = loadQuizTopics();
   return saveQuizTopics(topics.filter((topic) => topic.id !== topicId));

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import { lerpMatrix3, linComb3, matVec3 } from '../math/linearAlgebra.js';
 import { useVisualizerStore } from '../store/useVisualizerStore.js';
@@ -23,15 +23,16 @@ function scale3(v, scalar) {
   return [(v[0] ?? 0) * scalar, (v[1] ?? 0) * scalar, (v[2] ?? 0) * scalar];
 }
 
-function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1 }) {
+function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1, start = [0, 0, 0] }) {
   const len = length3(vector);
   const dir = normalize3(vector);
+  const end = add3(start, vector);
 
   if (len < 1e-6) return null;
 
   const arrow = new THREE.ArrowHelper(
     new THREE.Vector3(dir[0], dir[1], dir[2]),
-    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(start[0], start[1], start[2]),
     len,
     color,
     Math.min(0.35, len * 0.22),
@@ -49,7 +50,7 @@ function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1 }) {
     <group>
       <primitive object={arrow} />
       {label && (
-        <Html position={[vector[0] * 1.06, vector[1] * 1.06, vector[2] * 1.06]} center>
+        <Html position={[start[0] + (end[0] - start[0]) * 1.06, start[1] + (end[1] - start[1]) * 1.06, start[2] + (end[2] - start[2]) * 1.06]} center>
           <span className="label3d" style={{ borderColor: color, color, opacity }}>{label}</span>
         </Html>
       )}
@@ -58,24 +59,47 @@ function VectorArrow({ vector, color = '#4f46e5', label, opacity = 1 }) {
 }
 
 function AxisLine({ axis, color, label }) {
-  const points = useMemo(() => {
-    const len = 4.5;
-    const a = scale3(axis, -len);
-    const b = scale3(axis, len);
-    return [new THREE.Vector3(...a), new THREE.Vector3(...b)];
-  }, [axis]);
+  const { camera } = useThree();
+  const dir = useMemo(() => new THREE.Vector3(...axis).normalize(), [axis]);
+  const negativeGeometry = useMemo(() => new THREE.BufferGeometry(), []);
+  const arrow = useMemo(() => new THREE.ArrowHelper(
+    dir,
+    new THREE.Vector3(0, 0, 0),
+    3.9,
+    color,
+    0.32,
+    0.18,
+  ), [dir, color]);
+  const labelAnchorRef = useRef(null);
 
-  const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
-  const labelPos = scale3(axis, 4.75);
+  useFrame(() => {
+    const cameraDistance = camera.position.length();
+    const len = Math.max(2.15, Math.min(3.9, cameraDistance * 0.34));
+    const headLength = Math.min(0.32, Math.max(0.24, len * 0.12));
+    const headWidth = Math.min(0.18, Math.max(0.14, len * 0.07));
+    const start = new THREE.Vector3(...scale3(axis, -len));
+    const end = new THREE.Vector3(0, 0, 0);
+
+    negativeGeometry.setFromPoints([start, end]);
+    arrow.setLength(len, headLength, headWidth);
+
+    if (labelAnchorRef.current) {
+      const labelPos = scale3(axis, len + 0.28);
+      labelAnchorRef.current.position.set(labelPos[0], labelPos[1], labelPos[2]);
+    }
+  });
 
   return (
     <group>
-      <line geometry={geometry}>
+      <line geometry={negativeGeometry}>
         <lineBasicMaterial color={color} transparent opacity={0.55} />
       </line>
-      <Html position={labelPos} center>
-        <span className="label3d axis-label" style={{ color }}>{label}</span>
-      </Html>
+      <primitive object={arrow} />
+      <group ref={labelAnchorRef}>
+        <Html center>
+          <span className="label3d axis-label" style={{ color }}>{label}</span>
+        </Html>
+      </group>
     </group>
   );
 }
@@ -99,7 +123,49 @@ function SpanLine3D({ vector, color }) {
   );
 }
 
-function BasisParallelogram({ v, u, color = '#0ea5e9' }) {
+function DashedBasisAxis3D({ vector, color, label, axisLength = 5.2 }) {
+  const len = length3(vector);
+  const dir = normalize3(vector);
+  const geometry = useMemo(() => {
+    const positions = [];
+    const dash = 0.36;
+    const gap = 0.22;
+    const step = dash + gap;
+
+    for (let start = -axisLength; start < axisLength; start += step) {
+      const end = Math.min(start + dash, axisLength);
+      if (end <= start) continue;
+      positions.push(
+        dir[0] * start, dir[1] * start, dir[2] * start,
+        dir[0] * end, dir[1] * end, dir[2] * end,
+      );
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    return geom;
+  }, [axisLength, dir]);
+
+  if (len < 1e-6) return null;
+
+  const positiveTipStart = scale3(dir, axisLength - 0.5);
+  const positiveTipVector = scale3(dir, 0.5);
+  const labelPosition = scale3(dir, axisLength + 0.35);
+
+  return (
+    <group>
+      <lineSegments geometry={geometry}>
+        <lineBasicMaterial color={color} transparent opacity={0.9} />
+      </lineSegments>
+      <VectorArrow start={positiveTipStart} vector={positiveTipVector} color={color} opacity={0.9} />
+      <Html position={labelPosition} center>
+        <span className="label3d axis-label" style={{ color }}>{label}</span>
+      </Html>
+    </group>
+  );
+}
+
+function BasisParallelogram({ v, u, color = '#0ea5e9', fillOpacity = 0.22, edgeOpacity = 0.95 }) {
   const p0 = [0, 0, 0];
   const p1 = v;
   const p2 = add3(v, u);
@@ -123,10 +189,10 @@ function BasisParallelogram({ v, u, color = '#0ea5e9' }) {
   return (
     <group>
       <mesh geometry={geometry}>
-        <meshBasicMaterial color={color} transparent opacity={0.22} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={color} transparent opacity={fillOpacity} side={THREE.DoubleSide} />
       </mesh>
       <lineSegments geometry={edgeGeometry}>
-        <lineBasicMaterial color={color} transparent opacity={0.95} />
+        <lineBasicMaterial color={color} transparent opacity={edgeOpacity} />
       </lineSegments>
     </group>
   );
@@ -232,11 +298,16 @@ function Scene3D({ state }) {
           <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={0.65} />
           <VectorArrow vector={scale3(state.u, state.alpha)} color="#f97316" label="αu" />
           <VectorArrow vector={scale3(state.v, state.beta)} color="#4f46e5" label="βv" />
+          <VectorArrow start={scale3(state.u, state.alpha)} vector={scale3(state.v, state.beta)} color="#4f46e5" opacity={0.7} />
+          <VectorArrow start={scale3(state.v, state.beta)} vector={scale3(state.u, state.alpha)} color="#f97316" opacity={0.7} />
           <VectorArrow vector={combination} color="#0ea5e9" label="αu+βv" />
           <BasisParallelogram v={scale3(state.v, state.beta)} u={scale3(state.u, state.alpha)} color="#0ea5e9" />
         </>
       ) : state.concept === 'transformation' ? (
-        <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
+        <>
+          <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={0.45} />
+          <VectorArrow vector={Av} color="#4f46e5" label="A·v" />
+        </>
       ) : state.concept === 'eigen' ? (
         <>
           <SpanLine3D vector={state.v} color="#4f46e5" />
@@ -247,14 +318,30 @@ function Scene3D({ state }) {
 
       {(state.concept === 'span' || state.concept === 'basis') && (
         <>
-          <VectorArrow vector={state.v} color="#4f46e5" label="v" />
-          <VectorArrow vector={state.u} color="#f97316" label="u" />
-          {state.concept === 'basis' && (
-            <VectorArrow vector={[state.alpha * state.u[0] + state.beta * state.v[0], state.alpha * state.u[1] + state.beta * state.v[1], state.alpha * state.u[2] + state.beta * state.v[2]]} color="#0ea5e9" label="w" />
+          <VectorArrow vector={state.v} color="#4f46e5" label="v" opacity={state.concept === 'basis' ? 0.6 : 1} />
+          <VectorArrow vector={state.u} color="#f97316" label="u" opacity={state.concept === 'basis' ? 0.6 : 1} />
+          {state.concept === 'basis' ? (
+            <>
+              <DashedBasisAxis3D vector={state.u} color="#f97316" label="u-axis" />
+              <DashedBasisAxis3D vector={state.v} color="#4f46e5" label="v-axis" />
+            </>
+          ) : (
+            <>
+              <SpanLine3D vector={state.v} color="#4f46e5" />
+              <SpanLine3D vector={state.u} color="#f97316" />
+            </>
           )}
-          <SpanLine3D vector={state.v} color="#4f46e5" />
-          <SpanLine3D vector={state.u} color="#f97316" />
-          <BasisParallelogram v={state.v} u={state.u} color="#0ea5e9" />
+          <BasisParallelogram v={state.v} u={state.u} color="#0ea5e9" fillOpacity={state.concept === 'basis' ? 0.08 : 0.22} edgeOpacity={state.concept === 'basis' ? 0.45 : 0.95} />
+          {state.concept === 'basis' && (
+            <>
+              <VectorArrow vector={scale3(state.u, state.alpha)} color="#f97316" label="αu" />
+              <VectorArrow vector={scale3(state.v, state.beta)} color="#4f46e5" label="βv" />
+              <VectorArrow start={scale3(state.u, state.alpha)} vector={scale3(state.v, state.beta)} color="#4f46e5" opacity={0.75} />
+              <VectorArrow start={scale3(state.v, state.beta)} vector={scale3(state.u, state.alpha)} color="#f97316" opacity={0.75} />
+              <VectorArrow vector={[state.alpha * state.u[0] + state.beta * state.v[0], state.alpha * state.u[1] + state.beta * state.v[1], state.alpha * state.u[2] + state.beta * state.v[2]]} color="#0ea5e9" label="w" />
+              <BasisParallelogram v={scale3(state.v, state.beta)} u={scale3(state.u, state.alpha)} color="#0ea5e9" fillOpacity={0.14} edgeOpacity={0.8} />
+            </>
+          )}
         </>
       )}
 
@@ -326,7 +413,7 @@ export default function Canvas3D({ role = 'lecturer', followLecturer = false, on
 
   return (
     <div className="canvas3d d3-only" aria-label="3D linear algebra visualization">
-      <Canvas camera={{ position: [6, 5, 7], fov: 42, near: 0.1, far: 100 }}>
+      <Canvas camera={{ position: [7.2, 6.2, 8.2], fov: 44, near: 0.1, far: 100 }}>
         <color attach="background" args={['#f1f4fa']} />
         <Scene3D state={state} />
         <CameraSyncControls role={role} followLecturer={followLecturer} onCameraChange={onCameraChange} />

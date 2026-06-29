@@ -480,3 +480,21 @@ Run this short test immediately before a demo or submission:
 - [ ] In the lecturer quiz editor, entering `$A\vec{v}=\lambda\vec{v}$` shows a rendered preview.
 - [ ] The same LaTeX question renders correctly in Live Quiz, Student screen, Practice Mode, and results.
 - [ ] The Rotate button still cycles through several rotation angles before returning to Identity.
+
+- [ ] Confirm the 2D x/y axes include arrowheads in their positive directions.
+- [ ] Confirm the 3D x/y/z axes include arrowheads in their positive directions.
+
+- [ ] In 2D default zoom, the positive x and positive y axis arrowheads are visible without zooming out.
+- [ ] In 3D default zoom, the positive x, y, and z axis arrowheads are visible without zooming out.
+- [ ] In 2D Linear Transformation, click a matrix preset and then Animate; verify the vector/basis transition visibly replays from the start.
+- [ ] In 3D Linear Transformation, click a matrix preset and then Animate; verify the cube/basis/vector transition visibly replays from the start.
+- [ ] Verify LaTeX quiz rendering still works after the animation fix.
+- [ ] Verify Rotate still cycles through the preset angles.
+- [ ] In Linear Transformation 2D, verify the original vector **v** is visible together with **A·v**.
+- [ ] In Linear Transformation 3D, verify the original vector **v** is visible together with **A·v**.
+- [ ] In Linear Transformation 2D animation, the semi-transparent original vector v remains visually fixed in length while only A(t)·v changes.
+
+- [ ] In Manage Quiz Topics & Questions, verify that an existing topic title can be edited and saved.
+- [ ] Verify that an existing question text, answer options, and correct answer can be edited and saved.
+- [ ] Verify LaTeX preview works while editing an existing question.
+- [ ] Verify edited questions can still be opened as live quizzes.

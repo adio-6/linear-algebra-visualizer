@@ -288,3 +288,18 @@ Abstract Vector Spaces → Matrices now lets the user edit the entries of the 2�
 - Step 20.38: Updated the **Rotate** matrix preset so repeated clicks cycle through additional rotation angles and eventually return to the identity/original rotation state.
 
 - Step 20.39: Restored LaTeX quiz rendering after the Rotate preset-cycle update. Re-added `LatexText.jsx`, KaTeX dependency, LaTeX rendering in lecturer/student/practice quiz views, and preserved the Rotate cycle behavior.
+
+
+- Step 20.40: Added positive-direction arrowheads to the coordinate axes in both the 2D canvas and 3D scene.
+
+- Step 20.41: Adjusted 2D axis direction arrowheads so they stay inside the visible canvas at the default zoom, instead of appearing only after zooming out.
+
+- Step 20.42: Adjusted the 3D default framing and shortened the visible axis arrow extents so the x/y/z direction arrowheads are visible at the default zoom, not only after zooming out.
+
+- Step 20.43: Fixed animation replay in both 2D and 3D by forcing the visualization to render the start state before the animation frames advance. This preserves LaTeX, Rotate cycling, and axis arrow fixes.
+
+- Step 20.44: Added the original input vector **v** to the Linear Transformation visualization in both 2D and 3D, shown semi-transparently beside the transformed vector **A·v**.
+
+- Step 20.45: Stabilized 2D animation viewport scaling by calculating adaptive zoom from the final matrix instead of the interpolated matrix, so the original input vector v no longer appears to shrink during Linear Transformation animation.
+
+- Step 20.48: Added editing for existing quiz topics and questions in Manage Quiz Topics & Questions, including title edits, question text edits, answer option edits, correct-answer edits, LaTeX previews, and persistence through both the server quiz database and local fallback.

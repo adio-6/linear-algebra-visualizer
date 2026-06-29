@@ -41,7 +41,7 @@ export default function VectorInput() {
   const uRelevantConcepts = ['combination', 'span', 'basis'];
   const isURelevant = uRelevantConcepts.includes(concept);
   const isVRelevant = concept !== 'determinant';
-  const areCoefficientsRelevant = !['determinant', 'eigen', 'span'].includes(concept);
+  const areCoefficientsRelevant = !['determinant', 'eigen', 'span', 'transformation'].includes(concept);
 
   return (
     <div className="card-section vector-input-card">
@@ -83,7 +83,7 @@ export default function VectorInput() {
           disabled={!areCoefficientsRelevant}
           onChange={(e) => setAlpha(Number(e.target.value))}
         />
-        {!areCoefficientsRelevant && <div className="coef-disabled-hint">α is not used in the determinant, eigenvector, or span/basis view.</div>}
+        {!areCoefficientsRelevant && <div className="coef-disabled-hint">α is not used in the linear transformation, determinant, eigenvector, or span view.</div>}
       </div>
 
       <div className={`coef-row ${!areCoefficientsRelevant ? 'coef-row-disabled' : ''}`}>
@@ -100,7 +100,7 @@ export default function VectorInput() {
           disabled={!areCoefficientsRelevant}
           onChange={(e) => setBeta(Number(e.target.value))}
         />
-        {!areCoefficientsRelevant && <div className="coef-disabled-hint">β is not used in the determinant, eigenvector, or span/basis view.</div>}
+        {!areCoefficientsRelevant && <div className="coef-disabled-hint">β is not used in the linear transformation, determinant, eigenvector, or span view.</div>}
       </div>
     </div>
   );

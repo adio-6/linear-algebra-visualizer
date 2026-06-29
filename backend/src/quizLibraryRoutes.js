@@ -208,6 +208,41 @@ router.delete('/quiz-topics/:topicId', async (req, res) => {
 });
 
 
+
+router.put('/quiz-topics/:topicId/questions/:questionId', async (req, res) => {
+  const validation = validateQuestionPayload(req.body);
+  if (validation.error) {
+    res.status(400).json({ error: validation.error });
+    return;
+  }
+
+  try {
+    const result = await query(
+      `UPDATE quiz_questions
+       SET question = $1, options = $2::jsonb, correct_index = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE topic_id = $4 AND id = $5
+       RETURNING id, topic_id, concept, question, options, correct_index`,
+      [
+        validation.question,
+        JSON.stringify(validation.options),
+        validation.correctIndex,
+        req.params.topicId,
+        req.params.questionId,
+      ],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Question not found.' });
+      return;
+    }
+
+    res.json(mapQuestion(result.rows[0]));
+  } catch (error) {
+    console.error('[quiz-library] PUT /quiz-topics/:topicId/questions/:questionId failed', error);
+    res.status(500).json({ error: 'Could not update quiz question.' });
+  }
+});
+
 router.delete('/quiz-topics/:topicId/questions/:questionId', async (req, res) => {
   try {
     const result = await query(

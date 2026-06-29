@@ -149,7 +149,7 @@ function explanationFor(state, det, transformType) {
   }
 
   if (state.concept === 'basis') {
-    return 'בסיס הוא אוסף וקטורים בלתי תלויים שמאפשרים לייצג כל וקטור במרחב.';
+    return 'העיקרון המרכזי בהחלפת קואורדינטות הוא שהווקטור הגיאומטרי w נשאר אותו וקטור, אבל התיאור שלו משתנה: ביחס לבסיס B={u,v} כותבים w = αu + βv ולכן [w]B = (α,β).';
   }
 
   if (state.concept === 'eigen') {
@@ -355,9 +355,11 @@ export default function InsightPanel() {
     const w = state.concept === 'basis'
       ? state.u.map((value, index) => state.alpha * value + state.beta * state.v[index])
       : state.u.map((value, index) => value + state.v[index]);
+    const alphaUDisplay = state.u.map((value) => state.alpha * value);
+    const betaVDisplay = state.v.map((value) => state.beta * value);
     const mainMessage = state.concept === 'span'
       ? 'Span is determined by the vectors u and v, not by Matrix A.'
-      : 'Change of Basis treats u and v as new coordinate axes. Matrix A is not used in this view.';
+      : 'Change of Basis treats u and v as new coordinate axes. The key idea is that w is assembled as αu + βv, so [w]B = (α, β).';
 
     return (
       <aside className="right-panel">
@@ -369,7 +371,7 @@ export default function InsightPanel() {
 
             <div className="abstract-insight-callout">
               <strong>{mainMessage}</strong>
-              <span> The important values are the vectors themselves and the area they span together.</span>
+              <span>{state.concept === 'basis' ? 'The display now keeps the standard axes visible, highlights the basis axes u and v, and shows how αu and βv add to the same vector w.' : 'The important values are the vectors themselves and the area they span together.'}</span>
             </div>
 
             <div className="stat-grid" style={{ marginTop: 14 }}>
@@ -399,6 +401,19 @@ export default function InsightPanel() {
                 <div className="k">span{'{'}u, v{'}'}</div>
                 <div className="v" style={{ fontSize: 13 }}>{spanLabel}</div>
               </div>
+
+              {state.concept === 'basis' && (
+                <>
+                  <div className="stat">
+                    <div className="k">[w]B</div>
+                    <div className="v">({fmt(state.alpha)}, {fmt(state.beta)})</div>
+                  </div>
+                  <div className="stat">
+                    <div className="k">w in standard coords</div>
+                    <div className="v" style={{ fontSize: 13 }}>{formatVector(w)}</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -415,7 +430,10 @@ export default function InsightPanel() {
               <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>span{'{'}u, v{'}'}</span> = {spanLabel}</div>
               {state.concept === 'basis' && (
                 <>
+                  <div><span style={{ color: 'var(--vec-u)', fontWeight: 600 }}>αu</span> = {formatVector(alphaUDisplay)}</div>
+                  <div><span style={{ color: 'var(--vec-v)', fontWeight: 600 }}>βv</span> = {formatVector(betaVDisplay)}</div>
                   <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>w</span> = {formatVector(w)}</div>
+                  <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>w</span> = αu + βv</div>
                   <div><span style={{ color: 'var(--accent)', fontWeight: 600 }}>[w]B</span> = ({fmt(state.alpha)}, {fmt(state.beta)})</div>
                 </>
               )}

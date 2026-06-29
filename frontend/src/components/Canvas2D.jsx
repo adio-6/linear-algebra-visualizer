@@ -50,6 +50,14 @@ function computeAdaptiveWorldExtent(state, matrix) {
     points.push(state.v, state.u, [state.v[0] + state.u[0], state.v[1] + state.u[1]]);
   }
 
+  if (state.concept === 'basis' && finitePoint(state.v) && finitePoint(state.u)) {
+    const alpha = Number.isFinite(state.alpha) ? state.alpha : 0;
+    const beta = Number.isFinite(state.beta) ? state.beta : 0;
+    points.push([alpha * state.u[0], alpha * state.u[1]]);
+    points.push([beta * state.v[0], beta * state.v[1]]);
+    points.push([alpha * state.u[0] + beta * state.v[0], alpha * state.u[1] + beta * state.v[1]]);
+  }
+
   if (state.concept === 'combination' && finitePoint(state.v) && finitePoint(state.u)) {
     points.push(state.v, state.u);
     points.push(linComb(state.alpha || 0, state.u, state.beta || 0, state.v));
@@ -88,7 +96,11 @@ export default function Canvas2D({ state }) {
       const t = typeof state.t === 'number' ? state.t : 1;
       const Mt = lerpMatrix(state.A, t);
       const matrixIsUsed = usesMatrixTransform(state.concept);
-      const displayMatrix = matrixIsUsed ? Mt : [[1, 0], [0, 1]];
+      // Keep the viewport scale stable during animation.
+      // The animated matrix Mt changes every frame, but the original input vector v
+      // should not appear to shrink/grow just because the adaptive zoom recalculated
+      // a different world extent. Use the final matrix A for sizing the scene.
+      const displayMatrix = matrixIsUsed ? state.A : [[1, 0], [0, 1]];
       const worldExtent = computeAdaptiveWorldExtent(state, displayMatrix);
       const manualZoom = Number.isFinite(state.canvas2DZoom) ? state.canvas2DZoom : 1;
       const unit = (Math.min(width, height) / (worldExtent * 2)) * manualZoom;
@@ -185,6 +197,53 @@ export default function Canvas2D({ state }) {
         ctx.restore();
       }
 
+      function drawAxisArrowHead(from, to, color) {
+        const x1 = tx(from[0]);
+        const y1 = ty(from[1]);
+        const rawX2 = tx(to[0]);
+        const rawY2 = ty(to[1]);
+        const dx = rawX2 - x1;
+        const dy = rawY2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 1) return;
+
+        const padding = 18;
+        const minX = padding;
+        const maxX = width - padding;
+        const minY = padding;
+        const maxY = height - padding;
+
+        // Keep the axis arrowhead inside the visible canvas.
+        // The axis line may extend outside the viewport, but the direction marker should
+        // already be visible at the default zoom, without forcing the user to zoom out.
+        let scale = 1;
+        if (rawX2 > maxX && dx > 0) scale = Math.min(scale, (maxX - x1) / dx);
+        if (rawX2 < minX && dx < 0) scale = Math.min(scale, (minX - x1) / dx);
+        if (rawY2 > maxY && dy > 0) scale = Math.min(scale, (maxY - y1) / dy);
+        if (rawY2 < minY && dy < 0) scale = Math.min(scale, (minY - y1) / dy);
+
+        if (!Number.isFinite(scale) || scale <= 0) return;
+
+        const x2 = x1 + dx * scale;
+        const y2 = y1 + dy * scale;
+        const visibleLen = Math.hypot(x2 - x1, y2 - y1);
+        if (visibleLen < 1) return;
+
+        const ux = (x2 - x1) / visibleLen;
+        const uy = (y2 - y1) / visibleLen;
+        const head = 12;
+
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - ux * head - uy * head * 0.55, y2 - uy * head + ux * head * 0.55);
+        ctx.lineTo(x2 - ux * head + uy * head * 0.55, y2 - uy * head - ux * head * 0.55);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
       function drawGrid(M, highlight = false) {
         const range = 8;
         ctx.lineWidth = 1;
@@ -216,6 +275,10 @@ export default function Canvas2D({ state }) {
         ctx.moveTo(tx(ya1[0]), ty(ya1[1]));
         ctx.lineTo(tx(ya2[0]), ty(ya2[1]));
         ctx.stroke();
+
+        const axisColor = highlight ? getCSS('--primary') : getCSS('--grid-axis');
+        drawAxisArrowHead(xa1, xa2, axisColor);
+        drawAxisArrowHead(ya1, ya2, axisColor);
       }
 
       function drawArrow(from, to, color, lineWidth = 3, label = null, labelOptions = {}) {
@@ -292,6 +355,31 @@ export default function Canvas2D({ state }) {
         ctx.setLineDash([]);
       }
 
+      function drawBasisAxis(vec, color, label) {
+        const n = Math.hypot(vec[0], vec[1]);
+        if (n < 1e-6) return;
+        const r = worldExtent * 1.2;
+        const unitVec = [vec[0] / n, vec[1] / n];
+        const p1 = [-unitVec[0] * r, -unitVec[1] * r];
+        const p2 = [unitVec[0] * r, unitVec[1] * r];
+        ctx.save();
+        ctx.strokeStyle = `${color}99`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(tx(p1[0]), ty(p1[1]));
+        ctx.lineTo(tx(p2[0]), ty(p2[1]));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+        drawAxisArrowHead([0, 0], p2, color);
+        drawCanvasLabel(label, tx(p2[0]), ty(p2[1]), color, {
+          font: '700 12px JetBrains Mono, monospace',
+          paddingX: 7,
+          paddingY: 4,
+        });
+      }
+
       ctx.clearRect(0, 0, width, height);
 
       const det = determinant(Mt);
@@ -347,7 +435,7 @@ export default function Canvas2D({ state }) {
       if (state.concept === 'basis') {
         const vuDet = state.v[0] * state.u[1] - state.v[1] * state.u[0];
         const valid = Math.abs(vuDet) > 0.05;
-        const fill = valid ? 'rgba(14,165,233,0.18)' : 'rgba(245,158,11,0.22)';
+        const fill = valid ? 'rgba(14,165,233,0.10)' : 'rgba(245,158,11,0.16)';
         const stroke = valid ? getCSS('--accent') : getCSS('--warning');
         ctx.beginPath();
         ctx.moveTo(tx(0), ty(0));
@@ -357,10 +445,12 @@ export default function Canvas2D({ state }) {
         ctx.closePath();
         ctx.fillStyle = fill;
         ctx.fill();
-        ctx.strokeStyle = stroke;
+        ctx.strokeStyle = `${stroke}aa`;
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        drawBasisAxis(state.u, getCSS('--vec-u'), 'u-axis');
+        drawBasisAxis(state.v, getCSS('--vec-v'), 'v-axis');
       }
 
       if (matrixIsUsed) {
@@ -377,20 +467,54 @@ export default function Canvas2D({ state }) {
 
         drawArrow([0, 0], state.u, `${getCSS('--vec-u')}88`, 2, 'u', { perp: -14, distance: 18 });
         drawArrow([0, 0], state.v, `${getCSS('--vec-v')}88`, 2, 'v', { perp: 14, distance: 18 });
+
         const combinationResultColor = getCSS('--accent');
+        ctx.beginPath();
+        ctx.moveTo(tx(0), ty(0));
+        ctx.lineTo(tx(au[0]), ty(au[1]));
+        ctx.lineTo(tx(sum[0]), ty(sum[1]));
+        ctx.lineTo(tx(bv[0]), ty(bv[1]));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(14,165,233,0.10)';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(14,165,233,0.28)';
+        ctx.stroke();
+
         drawArrow([0, 0], au, getCSS('--vec-u'), 3, 'α·u', { perp: -16, distance: 22 });
-        drawArrow(au, [au[0] + bv[0], au[1] + bv[1]], getCSS('--vec-v'), 3, 'β·v', { perp: 16, distance: 22 });
+        drawArrow([0, 0], bv, getCSS('--vec-v'), 3, 'β·v', { perp: 16, distance: 22 });
+        drawArrow(au, sum, `${getCSS('--vec-v')}bb`, 2.5, null);
+        drawArrow(bv, sum, `${getCSS('--vec-u')}bb`, 2.5, null);
         drawArrow([0, 0], sum, combinationResultColor, 4, 'αu+βv', { perp: -20, distance: 28 });
       } else if (state.concept === 'span' || state.concept === 'basis') {
-        drawArrow([0, 0], state.v, getCSS('--vec-v'), 4, 'v', { perp: -14, distance: 24 });
-        drawArrow([0, 0], state.u, getCSS('--vec-u'), 4, 'u', { perp: 14, distance: 24 });
+        drawArrow([0, 0], state.v, state.concept === 'basis' ? `${getCSS('--vec-v')}88` : getCSS('--vec-v'), state.concept === 'basis' ? 3 : 4, 'v', { perp: -14, distance: 24 });
+        drawArrow([0, 0], state.u, state.concept === 'basis' ? `${getCSS('--vec-u')}88` : getCSS('--vec-u'), state.concept === 'basis' ? 3 : 4, 'u', { perp: 14, distance: 24 });
         if (state.concept === 'basis') {
-          const w = [state.alpha * state.u[0] + state.beta * state.v[0], state.alpha * state.u[1] + state.beta * state.v[1]];
-          drawArrow([0, 0], w, getCSS('--accent'), 4, 'w', { perp: -20, distance: 28 });
+          const alphaU = [state.alpha * state.u[0], state.alpha * state.u[1]];
+          const betaV = [state.beta * state.v[0], state.beta * state.v[1]];
+          const w = [alphaU[0] + betaV[0], alphaU[1] + betaV[1]];
+
+          ctx.beginPath();
+          ctx.moveTo(tx(0), ty(0));
+          ctx.lineTo(tx(alphaU[0]), ty(alphaU[1]));
+          ctx.lineTo(tx(w[0]), ty(w[1]));
+          ctx.lineTo(tx(betaV[0]), ty(betaV[1]));
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(14,165,233,0.12)';
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = 'rgba(14,165,233,0.34)';
+          ctx.stroke();
+
+          drawArrow([0, 0], alphaU, getCSS('--vec-u'), 3.5, 'αu', { perp: 16, distance: 22 });
+          drawArrow([0, 0], betaV, getCSS('--vec-v'), 3.5, 'βv', { perp: -16, distance: 22 });
+          drawArrow(alphaU, w, `${getCSS('--vec-v')}bb`, 2.5, null);
+          drawArrow(betaV, w, `${getCSS('--vec-u')}bb`, 2.5, null);
+          drawArrow([0, 0], w, getCSS('--accent'), 4.5, 'w', { perp: -22, distance: 28 });
         }
       } else if (state.concept === 'transformation' || state.concept === 'eigen') {
         const Av = matVec(Mt, state.v);
-        const showInputVector = state.concept === 'eigen' || t < 0.99;
+        const showInputVector = state.concept === 'transformation' || state.concept === 'eigen';
         if (showInputVector) {
           drawArrow([0, 0], state.v, `${getCSS('--vec-v')}88`, 3, 'v', { perp: 14, distance: 22 });
         }
