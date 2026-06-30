@@ -3057,3 +3057,129 @@ a.student-nav-button {
   gap: 6px;
   font-size: 13px;
 }
+
+/* ---------- Abstract Vector Spaces learning refinements ---------- */
+.abstract-learning-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.abstract-learning-panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  padding: 14px;
+}
+
+.abstract-learning-title {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.abstract-learning-body {
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.abstract-learning-body p {
+  margin: 5px 0;
+}
+
+.abstract-learning-body code,
+.abstract-computation-row code,
+.abstract-sample-table code {
+  font-family: JetBrains Mono, Consolas, monospace;
+  font-weight: 800;
+}
+
+.abstract-computation-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.abstract-computation-row {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.abstract-computation-row span {
+  color: var(--text-muted);
+  font-weight: 900;
+}
+
+.abstract-check-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.abstract-check-list li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.abstract-check-list span {
+  color: #16a34a;
+  font-weight: 900;
+}
+
+.abstract-pointwise-note {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.abstract-sample-table {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.abstract-sample-table > div {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.abstract-sample-table code {
+  padding: 5px 6px;
+  border-radius: 8px;
+  background: white;
+  text-align: center;
+}
+
+.abstract-basis-matrices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.abstract-basis-matrices .abstract-mini-matrix {
+  grid-template-columns: repeat(2, 34px);
+  padding: 8px;
+}
+
+.abstract-basis-matrices .abstract-mini-matrix span {
+  min-height: 28px;
+  font-size: 12px;
+}
+
+@media (max-width: 960px) {
+  .abstract-learning-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 import { fmt } from '../math/linearAlgebra.js';
+import React from 'react';
 import { useVisualizerStore } from '../store/useVisualizerStore.js';
 
 function combineArrays(alpha, a, beta, b) {
@@ -199,6 +200,103 @@ function MatrixBox({ matrix, label }) {
   );
 }
 
+function InlineVector({ values }) {
+  return <span>[{values.map((value) => fmt(value)).join(', ')}]</span>;
+}
+
+function LearningPanel({ title, children }) {
+  return (
+    <div className="abstract-learning-panel">
+      <div className="abstract-learning-title">{title}</div>
+      <div className="abstract-learning-body">{children}</div>
+    </div>
+  );
+}
+
+function ClosureCheck({ items }) {
+  return (
+    <LearningPanel title="Vector space check">
+      <ul className="abstract-check-list">
+        {items.map((item) => (
+          <li key={item}><span aria-hidden="true">✓</span>{item}</li>
+        ))}
+      </ul>
+    </LearningPanel>
+  );
+}
+
+function PolynomialComputation({ alpha, beta, polynomialP, polynomialQ, result }) {
+  const labels = ['constant', 'x', 'x²'];
+
+  return (
+    <LearningPanel title="How αp + βq is computed">
+      <div className="abstract-computation-grid">
+        {labels.map((label, index) => (
+          <div className="abstract-computation-row" key={label}>
+            <span>{label}</span>
+            <code>{fmt(alpha)}·{fmt(polynomialP[index])} + {fmt(beta)}·{fmt(polynomialQ[index])} = {fmt(result[index])}</code>
+          </div>
+        ))}
+      </div>
+    </LearningPanel>
+  );
+}
+
+function FunctionSampleTable({ pair, alpha, beta }) {
+  const sampleXs = [-1, 0, 1].filter((x) => x >= pair.domain[0] && x <= pair.domain[1]);
+
+  return (
+    <LearningPanel title="Pointwise operation">
+      <div className="abstract-pointwise-note">For each x: h(x) = αf(x) + βg(x)</div>
+      <div className="abstract-sample-table">
+        <div>x</div><div>f(x)</div><div>g(x)</div><div>h(x)</div>
+        {sampleXs.map((x) => {
+          const f = pair.f(x);
+          const g = pair.g(x);
+          const h = alpha * f + beta * g;
+          return (
+            <React.Fragment key={x}>
+              <code>{fmt(x)}</code><code>{fmt(f)}</code><code>{fmt(g)}</code><code>{fmt(h)}</code>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </LearningPanel>
+  );
+}
+
+function MatrixComputation({ alpha, beta, matrixA, matrixB, result }) {
+  return (
+    <LearningPanel title="How αA + βB is computed">
+      <div className="abstract-computation-grid">
+        {matrixA.map((row, rowIndex) => row.map((value, colIndex) => (
+          <div className="abstract-computation-row" key={`${rowIndex}-${colIndex}`}>
+            <span>[{rowIndex + 1},{colIndex + 1}]</span>
+            <code>{fmt(alpha)}·{fmt(value)} + {fmt(beta)}·{fmt(matrixB[rowIndex][colIndex])} = {fmt(result[rowIndex][colIndex])}</code>
+          </div>
+        )))}
+      </div>
+    </LearningPanel>
+  );
+}
+
+function MatrixBasisPanel() {
+  const basis = [
+    { label: 'E₁₁', matrix: [[1, 0], [0, 0]] },
+    { label: 'E₁₂', matrix: [[0, 1], [0, 0]] },
+    { label: 'E₂₁', matrix: [[0, 0], [1, 0]] },
+    { label: 'E₂₂', matrix: [[0, 0], [0, 1]] },
+  ];
+
+  return (
+    <LearningPanel title="Standard basis for 2×2 matrices">
+      <div className="abstract-basis-matrices">
+        {basis.map((item) => <MatrixBox key={item.label} matrix={item.matrix} label={item.label} />)}
+      </div>
+    </LearningPanel>
+  );
+}
+
 function PolynomialsView({ alpha, beta, polynomialP, polynomialQ }) {
   const result = combineArrays(alpha, polynomialP, beta, polynomialQ);
 
@@ -210,9 +308,25 @@ function PolynomialsView({ alpha, beta, polynomialP, polynomialQ }) {
         <FormulaCard title="Linear combination">αp(x) + βq(x)</FormulaCard>
         <FormulaCard title="Result">{polynomialToText(result, 'r')}</FormulaCard>
       </div>
+
+      <div className="abstract-learning-grid">
+        <LearningPanel title="Basis and coordinates">
+          <p>Basis: {'{1, x, x²}'}</p>
+          <p>p(x) ↔ <InlineVector values={polynomialP} /></p>
+          <p>q(x) ↔ <InlineVector values={polynomialQ} /></p>
+          <p>r(x) ↔ <InlineVector values={result} /></p>
+        </LearningPanel>
+        <PolynomialComputation alpha={alpha} beta={beta} polynomialP={polynomialP} polynomialQ={polynomialQ} result={result} />
+        <ClosureCheck items={[
+          'p(x) + q(x) is still a polynomial',
+          'αp(x) is still a polynomial',
+          'αp(x) + βq(x) stays in the polynomial space',
+        ]} />
+      </div>
+
       <PolynomialGraph polynomialP={polynomialP} polynomialQ={polynomialQ} result={result} />
       <div className="abstract-message">
-        A polynomial can be treated as a vector of coefficients. Here p(x) and q(x) are represented by their coefficient vectors, so the linear combination is computed coefficient by coefficient. The graph adds a visual layer: changing coefficients or α and β changes the curves immediately.
+        A polynomial can be treated as a vector of coefficients. The basis view connects the symbolic polynomial to coordinates, and the computation view shows that the linear combination is performed coefficient by coefficient.
       </div>
     </>
   );
@@ -238,6 +352,20 @@ function FunctionsView({ alpha, beta, functionPair }) {
         <FormulaCard title="Result">{hLabel}</FormulaCard>
       </div>
 
+      <div className="abstract-learning-grid">
+        <LearningPanel title="Basis-like pair and coordinates">
+          <p>Pair: {'{'}{pair.shortF}, {pair.shortG}{'}'}</p>
+          <p>h(x) = αf(x) + βg(x)</p>
+          <p>h(x) ↔ <InlineVector values={[alpha, beta]} /> in this pair</p>
+        </LearningPanel>
+        <FunctionSampleTable pair={pair} alpha={alpha} beta={beta} />
+        <ClosureCheck items={[
+          'f(x) + g(x) is still a function',
+          'αf(x) is still a function',
+          'h(x) = αf(x) + βg(x) stays in the function space',
+        ]} />
+      </div>
+
       <div className="function-plot-card" aria-label="Function linear combination plot">
         <svg viewBox="0 0 440 170" role="img">
           <line x1="0" y1={clampedZeroY} x2="440" y2={clampedZeroY} className="plot-axis" />
@@ -253,7 +381,7 @@ function FunctionsView({ alpha, beta, functionPair }) {
         </div>
       </div>
       <div className="abstract-message">
-        These are examples of functions as vectors. The selected pair is not a polynomial pair, because polynomial examples are handled in the separate Polynomials view.
+        Functions become vector-space objects when addition and scalar multiplication are defined pointwise. The table shows the operation at individual x values, while the graph shows the whole resulting function.
       </div>
     </>
   );
@@ -271,8 +399,25 @@ function MatricesView({ alpha, beta, abstractMatrixA, abstractMatrixB }) {
         <div className="abstract-operator">→</div>
         <MatrixBox matrix={result} label="αA + βB" />
       </div>
+
+      <div className="abstract-learning-grid">
+        <LearningPanel title="Coordinates by flattening">
+          <p>A ↔ <InlineVector values={abstractMatrixA.flat()} /></p>
+          <p>B ↔ <InlineVector values={abstractMatrixB.flat()} /></p>
+          <p>αA + βB ↔ <InlineVector values={result.flat()} /></p>
+        </LearningPanel>
+        <MatrixComputation alpha={alpha} beta={beta} matrixA={abstractMatrixA} matrixB={abstractMatrixB} result={result} />
+        <ClosureCheck items={[
+          'A + B is still a 2×2 matrix',
+          'αA is still a 2×2 matrix',
+          'αA + βB stays in the same matrix space',
+        ]} />
+      </div>
+
+      <MatrixBasisPanel />
+
       <div className="abstract-message">
-        Matrices can also form a vector space. In this view, the matrix itself is the vector-space object. Addition and scalar multiplication are performed entry by entry, so changing A, B, α, or β produces another matrix in the same space.
+        A 2×2 matrix can be viewed as a vector with four coordinates arranged in rows and columns. The result remains a 2×2 matrix because every entry is combined using the same linear rule.
       </div>
     </>
   );
